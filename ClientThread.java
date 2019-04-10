@@ -12,28 +12,29 @@ public class ClientThread extends Server implements Runnable
 	public ClientThread(Socket socket)
 	{
 		this.socket = socket;
+
+		try
+		{
+			out = new PrintWriter(socket.getOutputStream(), true);
+			in = new Scanner(socket.getInputStream());
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+		}
 	}
 
 	@Override
 	public void run()
 	{
-		try
+		while (socket.isConnected())
 		{
-			out = new PrintWriter(socket.getOutputStream(), true);
-			in = new Scanner(socket.getInputStream());
-			while (socket.isConnected())
+			if (in.hasNext())
 			{
-				if (in.hasNext())
-				{
-					String input = in.nextLine();
-					for (ClientThread client : clients)
-						client.getWriter().println(input);
-				}
+				String input = in.nextLine();
+				for (ClientThread client : clients)
+					client.getWriter().println(input);
 			}
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
 		}
 	}
 

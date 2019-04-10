@@ -13,10 +13,12 @@ public class Server
 	static ArrayList<ClientThread> clients;
 	static Timer waitTimer;
 	static int count;
+	static boolean gamePlaying;
 
 	public static void main(String[] args)
 	{
 		count = 0;
+		gamePlaying = false;
 		waitTimer = new Timer(1000, new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -24,11 +26,12 @@ public class Server
 				for (ClientThread client : clients)
 					client.getWriter().println(ServerConstants.WAIT_BEFORE_PLAY + count);
 				count--;
-				if (count > 0)
+				if (count >= 0)
 					return;
 				waitTimer.stop();
 				for (ClientThread client : clients)
 					client.getWriter().println(ServerConstants.READY_TO_PLAY);
+				gamePlaying = true;
 			}
 		});
 
@@ -63,6 +66,8 @@ public class Server
 					waitTimer.start();
 					count = 30;
 				}
+				if (gamePlaying)
+					client.getWriter().println(ServerConstants.GAME_IN_SESSION);
 			}
 			catch (IOException e)
 			{

@@ -1,24 +1,12 @@
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Scanner;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
 
 public class Client extends JPanel implements KeyListener
 {
@@ -33,13 +21,14 @@ public class Client extends JPanel implements KeyListener
 	JPanel waitPanel;
 	JLabel waitTime;
 	JFrame frame;
+	boolean waiting;
 
 	public Client()
 	{
+		waiting = false;
 		outer = this;
 		all = new HashMap<String, Object[]>();
 
-		System.out.println("new JFrame");
 		frame = new JFrame();
 		frame.setSize(600, 600);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -159,7 +148,14 @@ public class Client extends JPanel implements KeyListener
 					if (serverIn.hasNext())
 					{
 						String input = serverIn.nextLine();
-						if (input.startsWith(ServerConstants.WAIT_BEFORE_PLAY))
+
+						if (input.equals(ServerConstants.GAME_IN_SESSION))
+						{
+							waitTime.setText("Game is in session. Please wait for the next game.");
+							out.println(ServerConstants.DELETE_CHARACTER + name);
+							waiting = true;
+						}
+						else if (input.startsWith(ServerConstants.WAIT_BEFORE_PLAY))
 							waitTime.setText("Starting in " + Integer.parseInt(input.substring(ServerConstants.WAIT_BEFORE_PLAY.length())));
 						else if (input.equals(ServerConstants.READY_TO_PLAY))
 						{
@@ -170,13 +166,14 @@ public class Client extends JPanel implements KeyListener
 							outer.addKeyListener(outer);
 						}
 						else if (input.startsWith(ServerConstants.DELETE_CHARACTER))
-							all.remove(input.substring(2));
+							all.remove(input.substring(ServerConstants.DELETE_CHARACTER.length()));
 						else
 						{
 							if (input.startsWith(ServerConstants.ADD_CHARACTER))
 							{
 								input = input.substring(1);
-								out.println(name + '\0' + posX + '\0' + posY + '\0' + c.getRed() + '\0' + c.getGreen() + '\0' + c.getBlue());
+								if (!waiting)
+									out.println(name + '\0' + posX + '\0' + posY + '\0' + c.getRed() + '\0' + c.getGreen() + '\0' + c.getBlue());
 							}
 							String inName = input.substring(0, input.indexOf('\0'));
 							input = input.substring(input.indexOf('\0') + 1);
