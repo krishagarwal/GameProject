@@ -40,6 +40,8 @@ public class Server implements Runnable
 				for (Server client : clients)
 					client.getWriter().println(ServerConstants.READY_TO_PLAY);
 				gamePlaying = true;
+				if (redCount < blueCount)
+					new Bot("red");
 			}
 		});
 
@@ -125,5 +127,32 @@ public class Server implements Runnable
 	public PrintWriter getWriter()
 	{
 		return out;
+	}
+}
+
+class Bot
+{
+	private int posX;
+	private int posY;
+	// private String color;
+	
+	public Bot(String color)
+	{
+		posX = 275;
+		posY = 275;
+		// this.color = color;
+
+		for (Server client : Server.clients)
+			client.getWriter().println(ServerConstants.ADD_CHARACTER + "Bot" + ServerConstants.NAME_SEPERATOR + '\0' + posX + '\0' + posY + '\0' + color);
+		Timer mover = new Timer(100, new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				posX += 2;
+				for (Server client : Server.clients)
+					client.getWriter().println("Bot" + ServerConstants.NAME_SEPERATOR + '\0' + posX + '\0' + posY + '\0' + color);
+			}
+		});
+		mover.start();
 	}
 }
