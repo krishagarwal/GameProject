@@ -64,7 +64,7 @@ public class Server
 				if (clients.size() == 1)
 				{
 					waitTimer.start();
-					count = 30;
+					count = ServerConstants.WAIT_TIME;
 				}
 				if (gamePlaying)
 					client.getWriter().println(ServerConstants.GAME_IN_SESSION);

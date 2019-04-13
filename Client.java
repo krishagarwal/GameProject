@@ -110,9 +110,9 @@ public class Client extends JPanel implements KeyListener
 			Object[] info = all.get(playerName);
 			playerName = playerName.substring(0, playerName.indexOf(ServerConstants.NAME_SEPERATOR));
 			g.setColor(Color.BLACK);
-			g.drawString(playerName, (Integer)(info[0]) + 25 - (int)(g.getFontMetrics().getStringBounds(playerName, g).getWidth()) / 2, (Integer)(info[1]) - 5);
+			g.drawString(playerName, (Integer)(info[0]) - posX + 300 - (int)(g.getFontMetrics().getStringBounds(playerName, g).getWidth()) / 2, (Integer)(info[1]) - posY + 270);
 			g.setColor((Color)(info[2]));
-			g.fillRect((Integer)(info[0]), (Integer)(info[1]), 50, 50);
+			g.fillRect((Integer)(info[0]) - posX + 275, (Integer)(info[1]) - posY + 275, 50, 50);
 		}
 	}
 
@@ -141,7 +141,6 @@ public class Client extends JPanel implements KeyListener
 			{
 				out = new PrintWriter(socket.getOutputStream(), true);
 				serverIn = new Scanner(socket.getInputStream());
-				out.println(ServerConstants.ADD_CHARACTER + name + '\0' + posX + '\0' + posY + '\0' + c.getRed() + '\0' + c.getGreen() + '\0' + c.getBlue());
 				
 				while (!socket.isClosed())
 				{
@@ -164,16 +163,16 @@ public class Client extends JPanel implements KeyListener
 							frame.repaint();
 							outer.requestFocus();
 							outer.addKeyListener(outer);
+							out.println(ServerConstants.ADD_CHARACTER + name + '\0' + posX + '\0' + posY + '\0' + c.getRed() + '\0' + c.getGreen() + '\0' + c.getBlue());
 						}
 						else if (input.startsWith(ServerConstants.DELETE_CHARACTER))
 							all.remove(input.substring(ServerConstants.DELETE_CHARACTER.length()));
-						else
+						else if (!waiting)
 						{
 							if (input.startsWith(ServerConstants.ADD_CHARACTER))
 							{
 								input = input.substring(1);
-								if (!waiting)
-									out.println(name + '\0' + posX + '\0' + posY + '\0' + c.getRed() + '\0' + c.getGreen() + '\0' + c.getBlue());
+								out.println(name + '\0' + posX + '\0' + posY + '\0' + c.getRed() + '\0' + c.getGreen() + '\0' + c.getBlue());
 							}
 							String inName = input.substring(0, input.indexOf('\0'));
 							input = input.substring(input.indexOf('\0') + 1);
