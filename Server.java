@@ -16,6 +16,8 @@ public class Server implements Runnable
 	static Timer waitTimer;
 	static int count;
 	static boolean gamePlaying;
+	static int redCount = 0;
+	static int blueCount = 0;
 
 	private Socket socket;
 	private Scanner in;
@@ -99,6 +101,16 @@ public class Server implements Runnable
 
 	public void run()
 	{
+		if (blueCount <= redCount)
+		{
+			out.println(ServerConstants.SET_COLOR + "blue");
+			blueCount++;
+		}
+		else
+		{
+			out.println(ServerConstants.SET_COLOR + "red");
+			redCount++;
+		}
 		while (socket.isConnected())
 		{
 			if (in.hasNext())

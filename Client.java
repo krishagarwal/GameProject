@@ -11,10 +11,9 @@ import java.util.Scanner;
 public class Client extends JPanel implements KeyListener
 {
 	private Socket socket;
-	private String name;
+	private String name, color;
 	HashMap<String, Object[]> all;
 	int posX, posY;
-	Color c;
 	private Scanner serverIn;
 	private PrintWriter out;
 	Client outer;
@@ -28,14 +27,13 @@ public class Client extends JPanel implements KeyListener
 		waiting = false;
 		outer = this;
 		all = new HashMap<String, Object[]>();
-
+		
 		frame = new JFrame();
 		frame.setSize(600, 600);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 		posX = 275;
 		posY = 275;
-		c = new Color((int)(Math.random() * 256), (int)(Math.random() * 256), (int)(Math.random() * 256));
 
 		JPanel start = new JPanel();
 		JTextField nameEnter = new JTextField();
@@ -60,6 +58,21 @@ public class Client extends JPanel implements KeyListener
 				frame.validate();
 				frame.repaint();
 
+				frame.addWindowListener(new WindowListener()
+				{
+					public void windowOpened(WindowEvent e) {}
+					public void windowIconified(WindowEvent e) {}
+					public void windowDeiconified(WindowEvent e) {}
+					public void windowDeactivated(WindowEvent e) {}
+					public void windowClosed(WindowEvent e) {}
+					public void windowActivated(WindowEvent e) {}
+
+					public void windowClosing(WindowEvent e)
+					{
+						out.println(ServerConstants.DELETE_CHARACTER + name);
+					}
+				});
+
 				int portNumber = 4444;
 				try
 				{
@@ -81,21 +94,6 @@ public class Client extends JPanel implements KeyListener
 				}
 			}
 		});
-
-		frame.addWindowListener(new WindowListener()
-		{
-			public void windowOpened(WindowEvent e) {}
-			public void windowIconified(WindowEvent e) {}
-			public void windowDeiconified(WindowEvent e) {}
-			public void windowDeactivated(WindowEvent e) {}
-			public void windowClosed(WindowEvent e) {}
-			public void windowActivated(WindowEvent e) {}
-
-			public void windowClosing(WindowEvent e)
-			{
-				out.println(ServerConstants.DELETE_CHARACTER + name);
-			}
-		});
 	}
 	public static void main(String[] args)
 	{
@@ -109,10 +107,14 @@ public class Client extends JPanel implements KeyListener
 		{
 			Object[] info = all.get(playerName);
 			playerName = playerName.substring(0, playerName.indexOf(ServerConstants.NAME_SEPERATOR));
+			if (info[2].equals("blue"))
+				g.setColor(Color.BLUE);
+			else
+				g.setColor(Color.RED);
+			g.fillRect((Integer)(info[0]), (Integer)(info[1]), 50, 50);
 			g.setColor(Color.BLACK);
-			g.drawString(playerName, (Integer)(info[0]) - posX + 300 - (int)(g.getFontMetrics().getStringBounds(playerName, g).getWidth()) / 2, (Integer)(info[1]) - posY + 270);
-			g.setColor((Color)(info[2]));
-			g.fillRect((Integer)(info[0]) - posX + 275, (Integer)(info[1]) - posY + 275, 50, 50);
+			g.drawString(playerName, (Integer)(info[0]) + 25 - (int)(g.getFontMetrics().getStringBounds(playerName, g).getWidth()) / 2, (Integer)(info[1]) - 5);
+			g.drawRect((Integer)(info[0]), (Integer)(info[1]), 50, 50);
 		}
 	}
 
@@ -130,7 +132,7 @@ public class Client extends JPanel implements KeyListener
 			posX -= 2;
 		else if (e == KeyEvent.VK_RIGHT)
 			posX += 2;
-		out.println(name + '\0' + posX + '\0' + posY + '\0' + c.getRed() + '\0' + c.getGreen() + '\0' + c.getBlue());
+		out.println(name + '\0' + posX + '\0' + posY + '\0' + color);
 	}
 
 	class ServerThread implements Runnable
@@ -148,7 +150,9 @@ public class Client extends JPanel implements KeyListener
 					{
 						String input = serverIn.nextLine();
 
-						if (input.equals(ServerConstants.GAME_IN_SESSION))
+						if (input.startsWith(ServerConstants.SET_COLOR))
+							color = input.substring(ServerConstants.SET_COLOR.length());
+						else if (input.equals(ServerConstants.GAME_IN_SESSION))
 						{
 							waitTime.setText("Game is in session. Please wait for the next game.");
 							out.println(ServerConstants.DELETE_CHARACTER + name);
@@ -163,7 +167,7 @@ public class Client extends JPanel implements KeyListener
 							frame.repaint();
 							outer.requestFocus();
 							outer.addKeyListener(outer);
-							out.println(ServerConstants.ADD_CHARACTER + name + '\0' + posX + '\0' + posY + '\0' + c.getRed() + '\0' + c.getGreen() + '\0' + c.getBlue());
+							out.println(ServerConstants.ADD_CHARACTER + name + '\0' + posX + '\0' + posY + '\0' + color);
 						}
 						else if (input.startsWith(ServerConstants.DELETE_CHARACTER))
 							all.remove(input.substring(ServerConstants.DELETE_CHARACTER.length()));
@@ -172,20 +176,16 @@ public class Client extends JPanel implements KeyListener
 							if (input.startsWith(ServerConstants.ADD_CHARACTER))
 							{
 								input = input.substring(1);
-								out.println(name + '\0' + posX + '\0' + posY + '\0' + c.getRed() + '\0' + c.getGreen() + '\0' + c.getBlue());
+								out.println(name + '\0' + posX + '\0' + posY + '\0' + color);
 							}
 							String inName = input.substring(0, input.indexOf('\0'));
 							input = input.substring(input.indexOf('\0') + 1);
-							Integer x = Integer.parseInt(input.substring(0, input.indexOf('\0')));
+							Integer pX = Integer.parseInt(input.substring(0, input.indexOf('\0')));
 							input = input.substring(input.indexOf('\0') + 1);
-							Integer y = Integer.parseInt(input.substring(0, input.indexOf('\0')));
+							Integer pY = Integer.parseInt(input.substring(0, input.indexOf('\0')));
 							input = input.substring(input.indexOf('\0') + 1);
-							Integer r = Integer.parseInt(input.substring(0, input.indexOf('\0')));
-							input = input.substring(input.indexOf('\0') + 1);
-							Integer g = Integer.parseInt(input.substring(0, input.indexOf('\0')));
-							input = input.substring(input.indexOf('\0') + 1);
-							Integer b = Integer.parseInt(input);
-							all.put(inName, new Object[] {x, y, new Color(r, g, b)});
+							String pColor = input;
+							all.put(inName, new Object[] {pX, pY, pColor});
 						}
 						outer.repaint();
 					}
