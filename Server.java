@@ -5,15 +5,21 @@ import javax.swing.Timer;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.awt.event.ActionEvent;
+import java.util.Scanner;
+import java.io.PrintWriter;
 
-public class Server
+public class Server implements Runnable
 {
 	static ServerSocket serverSocket;
 	static int portNumber = 4444;
-	static ArrayList<ClientThread> clients;
+	static ArrayList<Server> clients;
 	static Timer waitTimer;
 	static int count;
 	static boolean gamePlaying;
+
+	private Socket socket;
+	private Scanner in;
+	private PrintWriter out;
 
 	public static void main(String[] args)
 	{
@@ -23,13 +29,13 @@ public class Server
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				for (ClientThread client : clients)
+				for (Server client : clients)
 					client.getWriter().println(ServerConstants.WAIT_BEFORE_PLAY + count);
 				count--;
 				if (count >= 0)
 					return;
 				waitTimer.stop();
-				for (ClientThread client : clients)
+				for (Server client : clients)
 					client.getWriter().println(ServerConstants.READY_TO_PLAY);
 				gamePlaying = true;
 			}
@@ -51,13 +57,13 @@ public class Server
 
 	public static void acceptClients()
 	{
-		clients = new ArrayList<ClientThread>();
+		clients = new ArrayList<Server>();
 		while (true)
 		{
 			try
 			{
 				Socket socket = serverSocket.accept();
-				ClientThread client = new ClientThread(socket);
+				Server client = new Server(socket);
 				Thread thread = new Thread(client);
 				thread.start();
 				clients.add(client);
@@ -74,5 +80,38 @@ public class Server
 				System.out.println("Accept failed on: " + portNumber);
 			}
 		}
+	}
+
+	public Server(Socket socket)
+	{
+		this.socket = socket;
+
+		try
+		{
+			out = new PrintWriter(socket.getOutputStream(), true);
+			in = new Scanner(socket.getInputStream());
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+	public void run()
+	{
+		while (socket.isConnected())
+		{
+			if (in.hasNext())
+			{
+				String input = in.nextLine();
+				for (Server client : clients)
+					client.getWriter().println(input);
+			}
+		}
+	}
+
+	public PrintWriter getWriter()
+	{
+		return out;
 	}
 }
