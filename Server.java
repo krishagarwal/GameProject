@@ -105,12 +105,12 @@ public class Server implements Runnable
 	{
 		if (blueCount <= redCount)
 		{
-			out.println(ServerConstants.SET_COLOR + "blue");
+			out.println(ServerConstants.SET_TEAM + "blue");
 			blueCount++;
 		}
 		else
 		{
-			out.println(ServerConstants.SET_COLOR + "red");
+			out.println(ServerConstants.SET_TEAM + "red");
 			redCount++;
 		}
 		while (socket.isConnected())
@@ -134,23 +134,21 @@ class Bot
 {
 	private int posX;
 	private int posY;
-	// private String color;
 	
-	public Bot(String color)
+	public Bot(String team)
 	{
-		posX = 275;
-		posY = 275;
-		// this.color = color;
+		posX = (int)(Math.random() * 540 + 10);
+		posY = 500;
 
 		for (Server client : Server.clients)
-			client.getWriter().println(ServerConstants.ADD_CHARACTER + "Bot" + ServerConstants.NAME_SEPERATOR + '\0' + posX + '\0' + posY + '\0' + color);
+			client.getWriter().println(ServerConstants.ADD_CHARACTER + "Bot" + ServerConstants.NAME_SEPERATOR + '\0' + posX + '\0' + posY + '\0' + team);
 		Timer mover = new Timer(100, new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
 			{
 				posX += 2;
 				for (Server client : Server.clients)
-					client.getWriter().println("Bot" + ServerConstants.NAME_SEPERATOR + '\0' + posX + '\0' + posY + '\0' + color);
+					client.getWriter().println("Bot" + ServerConstants.NAME_SEPERATOR + '\0' + posX + '\0' + posY + '\0' + team);
 			}
 		});
 		mover.start();

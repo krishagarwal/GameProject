@@ -11,7 +11,7 @@ import java.util.Scanner;
 public class Client extends JPanel implements KeyListener
 {
 	private Socket socket;
-	private String name, color;
+	private String name, team;
 	HashMap<String, Object[]> all;
 	int posX, posY;
 	private Scanner serverIn;
@@ -108,9 +108,9 @@ public class Client extends JPanel implements KeyListener
 			Object[] info = all.get(playerName);
 			playerName = playerName.substring(0, playerName.indexOf(ServerConstants.NAME_SEPERATOR));
 			if (info[2].equals("blue"))
-				g.setColor(Color.BLUE);
+				g.setColor(new Color(147, 197, 255, 80));
 			else
-				g.setColor(Color.RED);
+				g.setColor(new Color(255, 132, 132, 80));
 			g.fillRect((Integer)(info[0]), (Integer)(info[1]), 50, 50);
 			g.setColor(Color.BLACK);
 			g.drawString(playerName, (Integer)(info[0]) + 25 - (int)(g.getFontMetrics().getStringBounds(playerName, g).getWidth()) / 2, (Integer)(info[1]) - 5);
@@ -132,7 +132,7 @@ public class Client extends JPanel implements KeyListener
 			posX -= 2;
 		else if (e == KeyEvent.VK_RIGHT)
 			posX += 2;
-		out.println(name + '\0' + posX + '\0' + posY + '\0' + color);
+		out.println(name + '\0' + posX + '\0' + posY + '\0' + team);
 	}
 
 	class ServerThread implements Runnable
@@ -150,8 +150,15 @@ public class Client extends JPanel implements KeyListener
 					{
 						String input = serverIn.nextLine();
 
-						if (input.startsWith(ServerConstants.SET_COLOR))
-							color = input.substring(ServerConstants.SET_COLOR.length());
+						if (input.startsWith(ServerConstants.SET_TEAM))
+						{
+							team = input.substring(ServerConstants.SET_TEAM.length());
+							posX = (int)(Math.random() * 540 + 10);
+							if (team.equals("blue"))
+								posY = 50;
+							else
+								posY = 500;
+						}
 						else if (input.equals(ServerConstants.GAME_IN_SESSION))
 						{
 							waitTime.setText("Game is in session. Please wait for the next game.");
@@ -167,7 +174,7 @@ public class Client extends JPanel implements KeyListener
 							frame.repaint();
 							outer.requestFocus();
 							outer.addKeyListener(outer);
-							out.println(ServerConstants.ADD_CHARACTER + name + '\0' + posX + '\0' + posY + '\0' + color);
+							out.println(ServerConstants.ADD_CHARACTER + name + '\0' + posX + '\0' + posY + '\0' + team);
 						}
 						else if (input.startsWith(ServerConstants.DELETE_CHARACTER))
 							all.remove(input.substring(ServerConstants.DELETE_CHARACTER.length()));
@@ -176,7 +183,7 @@ public class Client extends JPanel implements KeyListener
 							if (input.startsWith(ServerConstants.ADD_CHARACTER))
 							{
 								input = input.substring(1);
-								out.println(name + '\0' + posX + '\0' + posY + '\0' + color);
+								out.println(name + '\0' + posX + '\0' + posY + '\0' + team);
 							}
 							String inName = input.substring(0, input.indexOf('\0'));
 							input = input.substring(input.indexOf('\0') + 1);
