@@ -16,6 +16,7 @@ public class Server implements Runnable
 	static int portNumber = 4444;
 	static ArrayList<Server> clients;
 	static ConcurrentHashMap<String, Player> players;
+	static ConcurrentHashMap<String, Bullet> bullets;
 	static Timer waitTimer;
 	static int count;
 	static boolean gamePlaying;
@@ -30,6 +31,7 @@ public class Server implements Runnable
 		count = 0;
 		gamePlaying = false;
 		players = new ConcurrentHashMap<String, Player>();
+		bullets = new ConcurrentHashMap<String, Bullet>();
 		waitTimer = new Timer(1000, new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -123,6 +125,17 @@ public class Server implements Runnable
 				String input = in.nextLine();
 				if (input.startsWith(ServerConstants.UPDATE_CHARACTER))
 					players.get(input.substring(ServerConstants.UPDATE_CHARACTER.length(), input.indexOf('\0'))).setPlayer(input.substring(input.indexOf('\0') + 1));
+				// else if (input.startsWith(ServerConstants.CREATE_BULLET))
+				// {
+				// 	String name = input.substring(ServerConstants.CREATE_BULLET.length(), input.indexOf('\0'));
+				// 	allBullets.put(name, Bullet.getNewBullet(input.substring(input.indexOf('\0') + 1), null, true, new ActionListener()
+				// 	{
+				// 		public void actionPerformed(ActionEvent e)
+				// 		{
+							
+				// 		}
+				// 	}));
+				// }
 				else if (input.startsWith(ServerConstants.DELETE_CHARACTER))
 					players.remove(input.substring(ServerConstants.DELETE_CHARACTER.length()));
 				else if (input.startsWith(ServerConstants.ADD_CHARACTER))

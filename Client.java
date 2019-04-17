@@ -80,7 +80,7 @@ public class Client extends JPanel implements KeyListener, MouseListener
 				try
 				{
 					name = nameEnter.getText() + ServerConstants.NAME_SEPERATOR + InetAddress.getLocalHost() + System.currentTimeMillis();
-					socket = new Socket("192.168.1.168", portNumber);
+					socket = new Socket("192.168.1.2", portNumber);  // 192.168.1.2, mac: 192.168.1.168
 					Thread.sleep(1000);
 					Thread server = new Thread(new ServerThread());
 					server.start();
@@ -122,7 +122,13 @@ public class Client extends JPanel implements KeyListener, MouseListener
 
 		g.setColor(Color.RED);
 		for (Bullet bullet : allBullets.values())
+		{
+			if (bullet.team.equals("blue"))
+				g.setColor(Color.BLUE);
+			else
+				g.setColor(Color.RED);
 			g.fillOval(bullet.posX, bullet.posY, 10, 10);
+		}
 	}
 
 	public void keyTyped(KeyEvent e) {}
@@ -145,7 +151,7 @@ public class Client extends JPanel implements KeyListener, MouseListener
 	
 	public void mousePressed(MouseEvent e)
 	{
-		out.println(ServerConstants.CREATE_BULLET + (name + bulletCount) + '\0' + Bullet.toString(current.posX + 25, current.posY + 25, e.getX(), e.getY()));
+		out.println(ServerConstants.CREATE_BULLET + (name + bulletCount) + '\0' + Bullet.toString(current.posX + 25, current.posY + 25, e.getX(), e.getY(), current.team));
 		bulletCount++;
 	}
 
@@ -191,7 +197,7 @@ public class Client extends JPanel implements KeyListener, MouseListener
 						else if (input.startsWith(ServerConstants.SET_TEAM))
 						{
 							current.team = input.substring(ServerConstants.SET_TEAM.length());
-							current.posX = (int)(Math.random() * 540 + 10);
+							current.posX = (int)(Math.random() * 540 + 10) / 2 * 2;
 							if (current.team.equals("blue"))
 								current.posY = 50;
 							else
