@@ -39,6 +39,6 @@ class Player
 
 	public double getDistanceTo(int x, int y)
 	{
-		return Math.sqrt(Math.pow(x - posX, 2) + Math.pow(y - posY, 2));
+		return Math.sqrt(Math.pow(x - (posX + 25), 2) + Math.pow(y - (posY + 25), 2));
 	}
 }

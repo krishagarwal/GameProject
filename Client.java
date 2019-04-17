@@ -6,15 +6,15 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Scanner;
 
 public class Client extends JPanel implements KeyListener, MouseListener
 {
 	private Socket socket;
 	private String name;
-	HashMap<String, Player> allPlayers;
-	HashMap<String, Bullet> allBullets;
+	ConcurrentHashMap<String, Player> allPlayers;
+	ConcurrentHashMap<String, Bullet> allBullets;
 	Player current;
 	private Scanner serverIn;
 	PrintWriter out;
@@ -24,15 +24,14 @@ public class Client extends JPanel implements KeyListener, MouseListener
 	JFrame frame;
 	boolean waiting;
 
-	static int bulletCount;
+	static int bulletCount = 0;
 
 	public Client()
 	{
-		bulletCount = 0;
 		waiting = false;
 		outer = this;
-		allPlayers = new HashMap<String, Player>();
-		allBullets = new HashMap<String, Bullet>();
+		allPlayers = new ConcurrentHashMap<String, Player>();
+		allBullets = new ConcurrentHashMap<String, Bullet>();
 		current = new Player();
 		
 		frame = new JFrame();
@@ -123,7 +122,7 @@ public class Client extends JPanel implements KeyListener, MouseListener
 
 		g.setColor(Color.RED);
 		for (Bullet bullet : allBullets.values())
-			g.drawOval(bullet.posX, bullet.posY, 10, 10);
+			g.fillOval(bullet.posX, bullet.posY, 10, 10);
 	}
 
 	public void keyTyped(KeyEvent e) {}
@@ -169,22 +168,7 @@ public class Client extends JPanel implements KeyListener, MouseListener
 					if (serverIn.hasNext())
 					{
 						String input = serverIn.nextLine();
-						if (input.startsWith(ServerConstants.SET_TEAM))
-						{
-							current.team = input.substring(ServerConstants.SET_TEAM.length());
-							current.posX = (int)(Math.random() * 540 + 10);
-							if (current.team.equals("blue"))
-								current.posY = 50;
-							else
-								current.posY = 500;
-						}
-						else if (input.equals(ServerConstants.GAME_IN_SESSION))
-						{
-							waitTime.setText("Game is in session. Please wait for the next game.");
-							out.println(ServerConstants.DELETE_CHARACTER + name);
-							waiting = true;
-						}
-						else if (input.equals(ServerConstants.READY_TO_PLAY))
+						if (input.equals(ServerConstants.READY_TO_PLAY))
 						{
 							frame.setContentPane(outer);
 							frame.validate();
@@ -194,10 +178,27 @@ public class Client extends JPanel implements KeyListener, MouseListener
 							outer.addMouseListener(outer);
 							out.println(ServerConstants.ADD_CHARACTER + name + '\0' + current.toString());
 						}
+						else if (input.equals(ServerConstants.GAME_IN_SESSION))
+						{
+							waitTime.setText("Game is in session. Please wait for the next game.");
+							out.println(ServerConstants.DELETE_CHARACTER + name);
+							waiting = true;
+						}
+						else if (!waiting && input.startsWith(ServerConstants.UPDATE_CHARACTER))
+							allPlayers.get(input.substring(ServerConstants.UPDATE_CHARACTER.length(), input.indexOf('\0'))).setPlayer(input.substring(input.indexOf('\0') + 1));
+						else if (input.startsWith(ServerConstants.CREATE_BULLET))
+							allBullets.put(input.substring(ServerConstants.CREATE_BULLET.length(), input.indexOf('\0')), Bullet.getNewBullet(input.substring(input.indexOf('\0') + 1), outer, true));
+						else if (input.startsWith(ServerConstants.SET_TEAM))
+						{
+							current.team = input.substring(ServerConstants.SET_TEAM.length());
+							current.posX = (int)(Math.random() * 540 + 10);
+							if (current.team.equals("blue"))
+								current.posY = 50;
+							else
+								current.posY = 500;
+						}
 						else if (input.startsWith(ServerConstants.WAIT_BEFORE_PLAY))
 							waitTime.setText("Starting in " + Integer.parseInt(input.substring(ServerConstants.WAIT_BEFORE_PLAY.length())));
-						else if (input.startsWith(ServerConstants.CREATE_BULLET))
-							allBullets.put(input.substring(ServerConstants.CREATE_BULLET.length(), input.indexOf('\0')), Bullet.getNewBullet(input.substring(input.indexOf('\0') + 1), outer));
 						else if (input.startsWith(ServerConstants.DELETE_CHARACTER))
 							allPlayers.remove(input.substring(ServerConstants.DELETE_CHARACTER.length()));
 						else if (!waiting && input.startsWith(ServerConstants.ADD_CHARACTER))
@@ -205,8 +206,6 @@ public class Client extends JPanel implements KeyListener, MouseListener
 							out.println(ServerConstants.UPDATE_CHARACTER + name + '\0' + current.toString());
 							allPlayers.put(input.substring(ServerConstants.ADD_CHARACTER.length(), input.indexOf('\0')), Player.getNewPlayer(input.substring(input.indexOf('\0') + 1)));
 						}
-						else if (!waiting && input.startsWith(ServerConstants.UPDATE_CHARACTER))
-							allPlayers.get(input.substring(ServerConstants.UPDATE_CHARACTER.length(), input.indexOf('\0'))).setPlayer(input.substring(input.indexOf('\0') + 1));
 						outer.repaint();
 					}
 				}
@@ -216,51 +215,5 @@ public class Client extends JPanel implements KeyListener, MouseListener
 				e.printStackTrace();
 			}
 		}
-	}
-}
-
-class Bullet
-{
-	int posX, posY;
-	private PrintWriter out;
-	Timer mover;
-
-	private Bullet(int x, int y, int xAdd, int yAdd, JPanel ref)
-	{
-		posX = x;
-		posY = y;
-		mover = new Timer(10, new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				posX += xAdd;
-				posY += yAdd;
-				ref.repaint();
-			}
-		});
-		mover.start();
-	}
-
-	private static Bullet getNewBullet(int fromX, int fromY, int toX, int toY, JPanel ref)
-	{
-		double radians = Math.atan((double)(toY - fromY) / (toX - fromX));
-		return new Bullet(fromX, fromY, (int)(Math.cos(radians) * 6) * Math.abs(toX - fromX) / (toX - fromX), (int)(Math.sin(radians) * 6) * Math.abs(toX - fromX) / (toX - fromX), ref);
-	}
-
-	public static Bullet getNewBullet(String input, JPanel ref)
-	{
-		int fromX = Integer.parseInt(input.substring(0, input.indexOf('\0')));
-		input = input.substring(input.indexOf('\0') + 1);
-		int fromY = Integer.parseInt(input.substring(0, input.indexOf('\0')));
-		input = input.substring(input.indexOf('\0') + 1);
-		int toX = Integer.parseInt(input.substring(0, input.indexOf('\0')));
-		input = input.substring(input.indexOf('\0') + 1);
-		int toY = Integer.parseInt(input);
-		return getNewBullet(fromX, fromY, toX, toY, ref);
-	}
-
-	public static String toString(int fromX, int fromY, int toX, int toY)
-	{
-		return "" + fromX + '\0' + fromY + '\0' + toX + '\0' + toY;
 	}
 }

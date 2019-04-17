@@ -1,7 +1,7 @@
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.swing.Timer;
 import java.awt.event.ActionListener;
@@ -15,7 +15,7 @@ public class Server implements Runnable
 	static ServerSocket serverSocket;
 	static int portNumber = 4444;
 	static ArrayList<Server> clients;
-	static HashMap<String, Player> players;
+	static ConcurrentHashMap<String, Player> players;
 	static Timer waitTimer;
 	static int count;
 	static boolean gamePlaying;
@@ -29,7 +29,7 @@ public class Server implements Runnable
 	{
 		count = 0;
 		gamePlaying = false;
-		players = new HashMap<String, Player>();
+		players = new ConcurrentHashMap<String, Player>();
 		waitTimer = new Timer(1000, new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -121,12 +121,12 @@ public class Server implements Runnable
 			if (in.hasNext())
 			{
 				String input = in.nextLine();
-				if (input.startsWith(ServerConstants.DELETE_CHARACTER))
+				if (input.startsWith(ServerConstants.UPDATE_CHARACTER))
+					players.get(input.substring(ServerConstants.UPDATE_CHARACTER.length(), input.indexOf('\0'))).setPlayer(input.substring(input.indexOf('\0') + 1));
+				else if (input.startsWith(ServerConstants.DELETE_CHARACTER))
 					players.remove(input.substring(ServerConstants.DELETE_CHARACTER.length()));
 				else if (input.startsWith(ServerConstants.ADD_CHARACTER))
 					players.put(input.substring(ServerConstants.ADD_CHARACTER.length(), input.indexOf('\0')), Player.getNewPlayer(input.substring(input.indexOf('\0') + 1)));
-				else if (input.startsWith(ServerConstants.UPDATE_CHARACTER))
-					players.get(input.substring(ServerConstants.UPDATE_CHARACTER.length(), input.indexOf('\0'))).setPlayer(input.substring(input.indexOf('\0') + 1));
 				for (Server client : clients)
 					client.getWriter().println(input);
 			}
@@ -147,38 +147,5 @@ public class Server implements Runnable
 				nearest = curr;
 		}
 		return nearest;
-	}
-}
-
-class Bot
-{
-	private Player player;
-	private String name;
-
-	public Bot(String team)
-	{
-		player = new Player(team, (int)(Math.random() * 540 + 10), 500);
-		name = "Bot" + ServerConstants.NAME_SEPERATOR;
-
-		for (Server client : Server.clients)
-			client.getWriter().println(ServerConstants.ADD_CHARACTER + name + '\0' + player.toString());
-		Timer mover = new Timer(85, new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				Player nearest = Server.getNearestOpponent(player);
-				if (nearest == null)
-					return;
-				if (Math.abs(nearest.posX - player.posX) > Math.abs(nearest.posY - player.posY) && Math.abs(nearest.posX - player.posX) > 100)
-					player.posX += 2 * (nearest.posX - player.posX) / Math.abs(nearest.posX - player.posX);
-				else if (Math.abs(nearest.posY - player.posY) > 100)
-					player.posY += 2 * (nearest.posY - player.posY) / Math.abs(nearest.posY - player.posY);
-				else
-					return;
-				for (Server client : Server.clients)
-					client.getWriter().print(ServerConstants.UPDATE_CHARACTER + name + '\0' + player.toString());
-			}
-		});
-		mover.start();
 	}
 }
