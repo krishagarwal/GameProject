@@ -132,8 +132,11 @@ public class Server implements Runnable
 				else if (input.startsWith(ServerConstants.DELETE_PLAYER))
 					players.remove(input.substring(ServerConstants.DELETE_PLAYER.length()));
 				else if (input.startsWith(ServerConstants.ADD_PLAYER))
+				{
 					players.put(input.substring(ServerConstants.ADD_PLAYER.length(), input.indexOf('\0')), 
 						Player.getNewPlayer(input.substring(input.indexOf('\0') + 1)));
+						System.out.println(input.substring(ServerConstants.ADD_PLAYER.length(), input.indexOf(ServerConstants.NAME_SEPERATOR)));
+				}
 				sendToAll(input);
 			}
 		}
