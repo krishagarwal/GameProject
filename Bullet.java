@@ -1,11 +1,11 @@
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import javax.swing.Timer;
-import javax.swing.JPanel;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Bullet
 {
-	int posX, posY;
+	int posX, posY, addX, addY;
 	Timer mover;
 	String team;
 
@@ -13,13 +13,15 @@ public class Bullet
 	{
 		posX = x;
 		posY = y;
+		addX = xAdd;
+		addY = yAdd;
 		this.team = team;
 		mover = new Timer(10, new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				posX += xAdd;
-				posY += yAdd;
+				posX += addX;
+				posY += addY;
 				ref.repaint();
 			}
 		});
@@ -56,6 +58,20 @@ public class Bullet
 
 	public static String toString(int fromX, int fromY, int toX, int toY, String team)
 	{
-		return "" + (fromX - 5) + '\0' + (fromY - 5) + '\0' + (toX - 5) + '\0' + (toY - 5) + '\0' + team;
+		return "" + fromX + '\0' + fromY + '\0' + toX + '\0' + toY + '\0' + team;
+	}
+
+	public void remove(String name, ConcurrentHashMap<String, Bullet> bullets)
+	{
+		mover.stop();
+		bullets.remove(name);
+	}
+
+	public void draw(Graphics g)
+	{
+		g.setColor(Color.RED);
+		if (team.equals("blue"))
+			g.setColor(Color.BLUE);
+		g.fillOval(posX - ServerConstants.BULLET_SIZE / 2, posY - ServerConstants.BULLET_SIZE / 2, ServerConstants.BULLET_SIZE, ServerConstants.BULLET_SIZE);
 	}
 }

@@ -1,19 +1,16 @@
+import javax.swing.*;
+import java.awt.event.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.swing.Timer;
-import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.awt.event.ActionEvent;
 import java.util.Scanner;
 import java.io.PrintWriter;
 
 public class Server implements Runnable
 {
 	static ServerSocket serverSocket;
-	static int portNumber = 4444;
 	static ArrayList<Server> clients;
 	static ConcurrentHashMap<String, Player> players;
 	static ConcurrentHashMap<String, Bullet> bullets;
@@ -36,14 +33,13 @@ public class Server implements Runnable
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				for (Server client : clients)
-					client.getWriter().println(ServerConstants.WAIT_BEFORE_PLAY + count);
+				
+				sendToAll(ServerConstants.WAIT_BEFORE_PLAY + count);
 				count--;
 				if (count >= 0)
 					return;
 				waitTimer.stop();
-				for (Server client : clients)
-					client.getWriter().println(ServerConstants.READY_TO_PLAY);
+				sendToAll(ServerConstants.READY_TO_PLAY);
 				gamePlaying = true;
 				if (redCount < blueCount)
 					new Bot("red");
@@ -54,12 +50,12 @@ public class Server implements Runnable
 		serverSocket = null;
 		try
 		{
-			serverSocket = new ServerSocket(portNumber);
+			serverSocket = new ServerSocket(ServerConstants.PORT_NUMBER);
 			acceptClients();
 		}
 		catch (IOException e)
 		{
-			System.err.println("Could not listen on port: " + portNumber);
+			System.err.println("Could not listen on port: " + ServerConstants.PORT_NUMBER);
 			System.exit(1);
 		}
 	}
@@ -86,7 +82,7 @@ public class Server implements Runnable
 			}
 			catch (IOException e)
 			{
-				System.err.println("Accept failed on: " + portNumber);
+				System.err.println("Accept failed on: " + ServerConstants.PORT_NUMBER);
 			}
 		}
 	}
@@ -123,25 +119,15 @@ public class Server implements Runnable
 			if (in.hasNext())
 			{
 				String input = in.nextLine();
-				if (input.startsWith(ServerConstants.UPDATE_CHARACTER))
-					players.get(input.substring(ServerConstants.UPDATE_CHARACTER.length(), input.indexOf('\0'))).setPlayer(input.substring(input.indexOf('\0') + 1));
-				// else if (input.startsWith(ServerConstants.CREATE_BULLET))
-				// {
-				// 	String name = input.substring(ServerConstants.CREATE_BULLET.length(), input.indexOf('\0'));
-				// 	allBullets.put(name, Bullet.getNewBullet(input.substring(input.indexOf('\0') + 1), null, true, new ActionListener()
-				// 	{
-				// 		public void actionPerformed(ActionEvent e)
-				// 		{
-							
-				// 		}
-				// 	}));
-				// }
-				else if (input.startsWith(ServerConstants.DELETE_CHARACTER))
-					players.remove(input.substring(ServerConstants.DELETE_CHARACTER.length()));
-				else if (input.startsWith(ServerConstants.ADD_CHARACTER))
-					players.put(input.substring(ServerConstants.ADD_CHARACTER.length(), input.indexOf('\0')), Player.getNewPlayer(input.substring(input.indexOf('\0') + 1)));
-				for (Server client : clients)
-					client.getWriter().println(input);
+				if (input.startsWith(ServerConstants.UPDATE_PLAYER))
+					players.get(input.substring(ServerConstants.UPDATE_PLAYER.length(), input.indexOf('\0'))).setPlayer(input.substring(input.indexOf('\0') + 1));
+				else if (input.startsWith(ServerConstants.CREATE_BULLET))
+					addBulletLog(input);
+				else if (input.startsWith(ServerConstants.DELETE_PLAYER))
+					players.remove(input.substring(ServerConstants.DELETE_PLAYER.length()));
+				else if (input.startsWith(ServerConstants.ADD_PLAYER))
+					players.put(input.substring(ServerConstants.ADD_PLAYER.length(), input.indexOf('\0')), Player.getNewPlayer(input.substring(input.indexOf('\0') + 1)));
+				sendToAll(input);
 			}
 		}
 	}
@@ -151,14 +137,43 @@ public class Server implements Runnable
 		return out;
 	}
 
-	public static Player getNearestOpponent(Player ref)
+	public static void sendToAll(String input)
+	{
+		for (Server client : clients)
+			client.getWriter().println(input);
+	}
+
+	public static Player getNearestOpponent(int x, int y, String team)
 	{
 		Player nearest = null;
 		for (Player curr : players.values())
 		{
-			if (!curr.team.equals(ref.team) && (nearest == null || curr.getDistanceTo(ref.posX, ref.posY) < nearest.getDistanceTo(ref.posX, ref.posY)))
+			if (!curr.team.equals(team) && (nearest == null || curr.getDistanceTo(x, x) < nearest.getDistanceTo(nearest.posX, nearest.posY)))
 				nearest = curr;
 		}
 		return nearest;
+	}
+
+	public static void addBulletLog(String input)
+	{
+		String name = input.substring(ServerConstants.CREATE_BULLET.length(), input.indexOf('\0'));
+		Bullet toAdd = Bullet.getNewBullet(input.substring(input.indexOf('\0') + 1), null, false);
+		bullets.put(name, toAdd);
+		toAdd.mover = new Timer(10, new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				toAdd.posX += toAdd.addX;
+				toAdd.posY += toAdd.addY;
+				Player nearest = getNearestOpponent(toAdd.posX, toAdd.posY, toAdd.team);
+				if (nearest == null)
+					return;
+				if (nearest.getDistanceTo(toAdd.posX, toAdd.posY) < 25 * Math.sqrt(2)) {
+					bullets.get(name).remove(name, bullets);
+					sendToAll(ServerConstants.TERMINATE_BULLET + name);
+				}
+			}
+		});
+		toAdd.mover.start();
 	}
 }
