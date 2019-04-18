@@ -3,20 +3,23 @@ import javax.swing.*;
 
 public class Bot
 {
-	private Player player;
 	private String name;
 	private static int bulletCount = 0;
 
 	public Bot(String team)
 	{
-		player = new Player(team, (int)(Math.random() * 540 + 10)  / 2 * 2, 500);
+		int posX = (int)(Math.random() * (ServerConstants.PLAYER_SIZE - ServerConstants.PLAYER_SIZE * 3) + ServerConstants.PLAYER_SIZE * 1.5);
+		int posY = ServerConstants.FRAME_SIZE - ServerConstants.PLAYER_SIZE;
+		if (team.equals("blue"))
+			posY = ServerConstants.PLAYER_SIZE;
 		name = "Bot" + ServerConstants.NAME_SEPERATOR;
-		Server.players.put(name, player);
-		Server.sendToAll(ServerConstants.ADD_PLAYER + name + '\0' + player.toString());
+		Server.players.put(name, new Player(posX, 500, team));
+		Server.sendToAll(ServerConstants.ADD_PLAYER + name + '\0' + Player.toString(posX, posY, team));
 		Timer mover = new Timer(85, new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
 			{
+				Player player = Server.players.get(name);
 				Player nearest = Server.getNearestOpponent(player.posX, player.posY, player.team);
 				if (nearest == null)
 					return;
@@ -29,12 +32,32 @@ public class Bot
 				bulletCount++;
 
 				if (Math.abs(nearest.posX - player.posX) > Math.abs(nearest.posY - player.posY) && Math.abs(nearest.posX - player.posX) > 100)
-					player.posX += 2 * (nearest.posX - player.posX) / Math.abs(nearest.posX - player.posX);
+				{
+					// player.posX += 2 * Math.abs(nearest.posX - player.posX) / (nearest.posX - player.posX);
+					if (nearest.posX - player.posX < 0)
+					{
+						player.posX -= 2;
+						Server.sendToAll(ServerConstants.MOVE_PLAYER_LEFT + name);
+					}
+					else
+					{
+						player.posX += 2;
+						Server.sendToAll(ServerConstants.MOVE_PLAYER_RIGHT + name);
+					}
+				}
 				else if (Math.abs(nearest.posY - player.posY) > 100)
-					player.posY += 2 * (nearest.posY - player.posY) / Math.abs(nearest.posY - player.posY);
-				else
-					return;
-				Server.sendToAll(ServerConstants.UPDATE_PLAYER + name + '\0' + player.toString());
+				{
+					if (nearest.posY - player.posY < 0)
+					{
+						player.posY -= 2;
+						Server.sendToAll(ServerConstants.MOVE_PLAYER_UP + name);
+					}
+					else
+					{
+						player.posY += 2;
+						Server.sendToAll(ServerConstants.MOVE_PLAYER_DOWN + name);
+					}
+				}
 			}
 		});
 		mover.start();

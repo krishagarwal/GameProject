@@ -15,7 +15,6 @@ public class Client extends JPanel implements KeyListener, MouseListener
 	private String name;
 	ConcurrentHashMap<String, Player> players;
 	ConcurrentHashMap<String, Bullet> bullets;
-	Player player;
 	private Scanner serverIn;
 	PrintWriter out;
 	Client outer;
@@ -23,6 +22,7 @@ public class Client extends JPanel implements KeyListener, MouseListener
 	JLabel waitTime;
 	JFrame frame;
 	boolean waiting;
+	String team;
 
 	static int bulletCount = 0;
 
@@ -32,7 +32,6 @@ public class Client extends JPanel implements KeyListener, MouseListener
 		outer = this;
 		players = new ConcurrentHashMap<String, Player>();
 		bullets = new ConcurrentHashMap<String, Bullet>();
-		player = new Player();
 		
 		frame = new JFrame();
 		frame.setSize(ServerConstants.FRAME_SIZE, ServerConstants.FRAME_SIZE);
@@ -118,19 +117,19 @@ public class Client extends JPanel implements KeyListener, MouseListener
 	{
 		int e = evt.getKeyCode();
 		if (e == KeyEvent.VK_UP)
-			player.posY -= 2;
+			out.println(ServerConstants.MOVE_PLAYER_UP + name);
 		else if (e == KeyEvent.VK_DOWN)
-			player.posY += 2;
+			out.println(ServerConstants.MOVE_PLAYER_DOWN + name);
 		else if (e == KeyEvent.VK_LEFT)
-			player.posX -= 2;
+			out.println(ServerConstants.MOVE_PLAYER_LEFT + name);
 		else if (e == KeyEvent.VK_RIGHT)
-			player.posX += 2;
-		out.println(ServerConstants.UPDATE_PLAYER + name + '\0' + player.toString());
+			out.println(ServerConstants.MOVE_PLAYER_RIGHT + name);
 	}
 
 	
 	public void mousePressed(MouseEvent e)
 	{
+		Player player = players.get(name);
 		out.println(ServerConstants.CREATE_BULLET + (name + bulletCount) + '\0' + Bullet.toString(player.posX, player.posY, e.getX(), e.getY(), player.team));
 		bulletCount++;
 	}
@@ -162,7 +161,10 @@ public class Client extends JPanel implements KeyListener, MouseListener
 							outer.requestFocus();
 							outer.addKeyListener(outer);
 							outer.addMouseListener(outer);
-							out.println(ServerConstants.ADD_PLAYER + name + '\0' + player.toString());
+							int posY = ServerConstants.FRAME_SIZE - ServerConstants.PLAYER_SIZE;
+							if (team.equals("blue"))
+								posY = ServerConstants.PLAYER_SIZE;
+							out.println(ServerConstants.ADD_PLAYER + name + '\0' + Player.toString((int)(Math.random() * (ServerConstants.PLAYER_SIZE - ServerConstants.PLAYER_SIZE * 3) + ServerConstants.PLAYER_SIZE * 1.5), posY, team));
 						}
 						else if (input.equals(ServerConstants.GAME_IN_SESSION))
 						{
@@ -172,30 +174,26 @@ public class Client extends JPanel implements KeyListener, MouseListener
 						}
 						else if (!waiting && input.startsWith(ServerConstants.UPDATE_BULLET))
 							bullets.get(input.substring(ServerConstants.UPDATE_BULLET.length())).update();
-						else if (!waiting && input.startsWith(ServerConstants.UPDATE_PLAYER))
-							players.get(input.substring(ServerConstants.UPDATE_PLAYER.length(), input.indexOf('\0'))).setPlayer(input.substring(input.indexOf('\0') + 1));
+						else if (!waiting && input.startsWith(ServerConstants.MOVE_PLAYER_UP))
+							players.get(input.substring(ServerConstants.MOVE_PLAYER_UP.length())).posY -= 2;
+						else if (!waiting && input.startsWith(ServerConstants.MOVE_PLAYER_DOWN))
+							players.get(input.substring(ServerConstants.MOVE_PLAYER_DOWN.length())).posY += 2;
+						else if (!waiting && input.startsWith(ServerConstants.MOVE_PLAYER_LEFT))
+							players.get(input.substring(ServerConstants.MOVE_PLAYER_LEFT.length())).posX -= 2;
+						else if (!waiting && input.startsWith(ServerConstants.MOVE_PLAYER_RIGHT))
+							players.get(input.substring(ServerConstants.MOVE_PLAYER_RIGHT.length())).posX += 2;
 						else if (!waiting && input.startsWith(ServerConstants.TERMINATE_BULLET))
 							bullets.remove(input.substring(ServerConstants.TERMINATE_BULLET.length()));
 						else if (!waiting && input.startsWith(ServerConstants.CREATE_BULLET))
 							bullets.put(input.substring(ServerConstants.CREATE_BULLET.length(), input.indexOf('\0')), Bullet.getNewBullet(input.substring(input.indexOf('\0') + 1)));
 						else if (!waiting && input.startsWith(ServerConstants.SET_TEAM))
-						{
-							player.team = input.substring(ServerConstants.SET_TEAM.length());
-							player.posX = (int)(Math.random() * (ServerConstants.PLAYER_SIZE - ServerConstants.PLAYER_SIZE * 3) + ServerConstants.PLAYER_SIZE * 1.5) / 2 * 2;
-							if (player.team.equals("blue"))
-								player.posY = ServerConstants.PLAYER_SIZE;
-							else
-								player.posY = ServerConstants.FRAME_SIZE - ServerConstants.PLAYER_SIZE;
-						}
+							team = input.substring(ServerConstants.SET_TEAM.length());
 						else if (input.startsWith(ServerConstants.WAIT_BEFORE_PLAY))
 							waitTime.setText("Starting in " + Integer.parseInt(input.substring(ServerConstants.WAIT_BEFORE_PLAY.length())));
 						else if (!waiting && input.startsWith(ServerConstants.DELETE_PLAYER))
 							players.remove(input.substring(ServerConstants.DELETE_PLAYER.length()));
 						else if (!waiting && input.startsWith(ServerConstants.ADD_PLAYER))
-						{
-							out.println(ServerConstants.UPDATE_PLAYER + name + '\0' + player.toString());
 							players.put(input.substring(ServerConstants.ADD_PLAYER.length(), input.indexOf('\0')), Player.getNewPlayer(input.substring(input.indexOf('\0') + 1)));
-						}
 						outer.repaint();
 					}
 				}

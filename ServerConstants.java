@@ -11,8 +11,11 @@ public final class ServerConstants
 	public static final String SET_TEAM = 			"\1\1\1\1\1\1";
 	public static final String CREATE_BULLET = 		"\1\1\1\1\1\1\1";
 	public static final String TERMINATE_BULLET = 	"\1\1\1\1\1\1\1\1";
-	public static final String UPDATE_PLAYER = 		"\1\1\1\1\1\1\1\1\1";
-	public static final String UPDATE_BULLET = 		"\1\1\1\1\1\1\1\1\1\1";
+	public static final String MOVE_PLAYER_RIGHT = 	"\1\1\1\1\1\1\1\1\1";
+	public static final String MOVE_PLAYER_LEFT = 	"\1\1\1\1\1\1\1\1\1\1";
+	public static final String MOVE_PLAYER_DOWN = 	"\1\1\1\1\1\1\1\1\1\1\1";
+	public static final String MOVE_PLAYER_UP = 	"\1\1\1\1\1\1\1\1\1\1\1\1";
+	public static final String UPDATE_BULLET = 		"\1\1\1\1\1\1\1\1\1\1\1\1\1";
 
 	// used as a separator, must have special character
 	public static final String NAME_SEPERATOR = 	"\2";

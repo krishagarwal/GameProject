@@ -35,7 +35,6 @@ public class Server implements Runnable
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				
 				sendToAll(ServerConstants.WAIT_BEFORE_PLAY + count);
 				count--;
 				if (count >= 0)
@@ -121,8 +120,14 @@ public class Server implements Runnable
 			if (in.hasNext())
 			{
 				String input = in.nextLine();
-				if (input.startsWith(ServerConstants.UPDATE_PLAYER))
-					players.get(input.substring(ServerConstants.UPDATE_PLAYER.length(), input.indexOf('\0'))).setPlayer(input.substring(input.indexOf('\0') + 1));
+				if (input.startsWith(ServerConstants.MOVE_PLAYER_UP))
+					players.get(input.substring(ServerConstants.MOVE_PLAYER_UP.length())).posY -= 2;
+				else if (input.startsWith(ServerConstants.MOVE_PLAYER_DOWN))
+					players.get(input.substring(ServerConstants.MOVE_PLAYER_DOWN.length())).posY += 2;
+				else if (input.startsWith(ServerConstants.MOVE_PLAYER_LEFT))
+					players.get(input.substring(ServerConstants.MOVE_PLAYER_LEFT.length())).posX -= 2;
+				else if (input.startsWith(ServerConstants.MOVE_PLAYER_RIGHT))
+					players.get(input.substring(ServerConstants.MOVE_PLAYER_RIGHT.length())).posX += 2;
 				else if (input.startsWith(ServerConstants.CREATE_BULLET))
 					addBulletLog(input);
 				else if (input.startsWith(ServerConstants.DELETE_PLAYER))
