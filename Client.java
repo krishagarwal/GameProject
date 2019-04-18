@@ -164,7 +164,8 @@ public class Client extends JPanel implements KeyListener, MouseListener
 							int posY = ServerConstants.FRAME_SIZE - ServerConstants.PLAYER_SIZE;
 							if (team.equals("blue"))
 								posY = ServerConstants.PLAYER_SIZE;
-							out.println(ServerConstants.ADD_PLAYER + name + '\0' + Player.toString((int)(Math.random() * (ServerConstants.PLAYER_SIZE - ServerConstants.PLAYER_SIZE * 3) + ServerConstants.PLAYER_SIZE * 1.5), posY, team));
+							out.println(ServerConstants.ADD_PLAYER + name + '\0' + Player.toString((int)(Math.random() * 
+								(ServerConstants.FRAME_SIZE - ServerConstants.PLAYER_SIZE * 3) + ServerConstants.PLAYER_SIZE * 1.5), posY, team));
 						}
 						else if (input.equals(ServerConstants.GAME_IN_SESSION))
 						{
@@ -185,7 +186,8 @@ public class Client extends JPanel implements KeyListener, MouseListener
 						else if (!waiting && input.startsWith(ServerConstants.TERMINATE_BULLET))
 							bullets.remove(input.substring(ServerConstants.TERMINATE_BULLET.length()));
 						else if (!waiting && input.startsWith(ServerConstants.CREATE_BULLET))
-							bullets.put(input.substring(ServerConstants.CREATE_BULLET.length(), input.indexOf('\0')), Bullet.getNewBullet(input.substring(input.indexOf('\0') + 1)));
+							bullets.put(input.substring(ServerConstants.CREATE_BULLET.length(), input.indexOf('\0')), 
+								Bullet.getNewBullet(input.substring(input.indexOf('\0') + 1)));
 						else if (!waiting && input.startsWith(ServerConstants.SET_TEAM))
 							team = input.substring(ServerConstants.SET_TEAM.length());
 						else if (input.startsWith(ServerConstants.WAIT_BEFORE_PLAY))
@@ -193,7 +195,8 @@ public class Client extends JPanel implements KeyListener, MouseListener
 						else if (!waiting && input.startsWith(ServerConstants.DELETE_PLAYER))
 							players.remove(input.substring(ServerConstants.DELETE_PLAYER.length()));
 						else if (!waiting && input.startsWith(ServerConstants.ADD_PLAYER))
-							players.put(input.substring(ServerConstants.ADD_PLAYER.length(), input.indexOf('\0')), Player.getNewPlayer(input.substring(input.indexOf('\0') + 1)));
+							players.put(input.substring(ServerConstants.ADD_PLAYER.length(), input.indexOf('\0')), 
+								Player.getNewPlayer(input.substring(input.indexOf('\0') + 1)));
 						outer.repaint();
 					}
 				}

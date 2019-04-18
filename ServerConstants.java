@@ -18,7 +18,7 @@ public final class ServerConstants
 	public static final String UPDATE_BULLET = 		"\1\1\1\1\1\1\1\1\1\1\1\1\1";
 
 	// used as a separator, must have special character
-	public static final String NAME_SEPERATOR = 	"\2";
+	public static final String NAME_SEPERATOR = "\2";
 	
 	// constant numerical fields
 	public static final int PORT_NUMBER = 4444;

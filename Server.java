@@ -18,8 +18,7 @@ public class Server implements Runnable
 	static Timer waitTimer;
 	static int count;
 	static boolean gamePlaying;
-	static int redCount = 0;
-	static int blueCount = 0;
+	static int redCount = 0, blueCount = 0;
 
 	private Socket socket;
 	private Scanner in;
@@ -133,7 +132,8 @@ public class Server implements Runnable
 				else if (input.startsWith(ServerConstants.DELETE_PLAYER))
 					players.remove(input.substring(ServerConstants.DELETE_PLAYER.length()));
 				else if (input.startsWith(ServerConstants.ADD_PLAYER))
-					players.put(input.substring(ServerConstants.ADD_PLAYER.length(), input.indexOf('\0')), Player.getNewPlayer(input.substring(input.indexOf('\0') + 1)));
+					players.put(input.substring(ServerConstants.ADD_PLAYER.length(), input.indexOf('\0')), 
+						Player.getNewPlayer(input.substring(input.indexOf('\0') + 1)));
 				sendToAll(input);
 			}
 		}
@@ -155,7 +155,7 @@ public class Server implements Runnable
 		Player nearest = null;
 		for (Player curr : players.values())
 		{
-			if (!curr.team.equals(team) && (nearest == null || curr.getDistanceTo(x, x) < nearest.getDistanceTo(nearest.posX, nearest.posY)))
+			if (!curr.team.equals(team) && (nearest == null || curr.getDistanceTo(x, y) < nearest.getDistanceTo(nearest.posX, nearest.posY)))
 				nearest = curr;
 		}
 		return nearest;

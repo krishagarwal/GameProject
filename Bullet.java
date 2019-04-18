@@ -27,7 +27,8 @@ public class Bullet
 		}
 		if (fromX == toX)
 			return new Bullet(fromX, fromY, 0, Math.abs(toY - fromY) / (toY - fromY) * 6, team);
-		return new Bullet(fromX, fromY, (int)(Math.cos(radians) * 6) * Math.abs(toX - fromX) / (toX - fromX), (int)(Math.sin(radians) * 6) * Math.abs(toX - fromX) / (toX - fromX), team);
+		return new Bullet(fromX, fromY, (int)(Math.cos(radians) * 6) * Math.abs(toX - fromX) / (toX - fromX), 
+			(int)(Math.sin(radians) * 6) * Math.abs(toX - fromX) / (toX - fromX), team);
 	}
 
 	public static Bullet getNewBullet(String input)
