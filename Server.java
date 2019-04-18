@@ -14,6 +14,7 @@ public class Server implements Runnable
 	static ArrayList<Server> clients;
 	static ConcurrentHashMap<String, Player> players;
 	static ConcurrentHashMap<String, Bullet> bullets;
+	static ConcurrentHashMap<String, Timer> bulletTimers;
 	static Timer waitTimer;
 	static int count;
 	static boolean gamePlaying;
@@ -29,6 +30,7 @@ public class Server implements Runnable
 		gamePlaying = false;
 		players = new ConcurrentHashMap<String, Player>();
 		bullets = new ConcurrentHashMap<String, Bullet>();
+		bulletTimers = new ConcurrentHashMap<String, Timer>();
 		waitTimer = new Timer(1000, new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -157,23 +159,24 @@ public class Server implements Runnable
 	public static void addBulletLog(String input)
 	{
 		String name = input.substring(ServerConstants.CREATE_BULLET.length(), input.indexOf('\0'));
-		Bullet toAdd = Bullet.getNewBullet(input.substring(input.indexOf('\0') + 1), null, false);
+		Bullet toAdd = Bullet.getNewBullet(input.substring(input.indexOf('\0') + 1));
 		bullets.put(name, toAdd);
-		toAdd.mover = new Timer(10, new ActionListener()
+		bulletTimers.put(name, new Timer(10, new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				toAdd.posX += toAdd.addX;
-				toAdd.posY += toAdd.addY;
+				toAdd.update();
+				sendToAll(ServerConstants.UPDATE_BULLET + name);
 				Player nearest = getNearestOpponent(toAdd.posX, toAdd.posY, toAdd.team);
 				if (nearest == null)
 					return;
-				if (nearest.getDistanceTo(toAdd.posX, toAdd.posY) < 25 * Math.sqrt(2)) {
-					bullets.get(name).remove(name, bullets);
+				if (nearest.getDistanceTo(toAdd.posX, toAdd.posY) < ServerConstants.PLAYER_SIZE / 2 * Math.sqrt(2)) {
+					bulletTimers.get(name).stop();
+					bulletTimers.remove(name);
 					sendToAll(ServerConstants.TERMINATE_BULLET + name);
 				}
 			}
-		});
-		toAdd.mover.start();
+		}));
+		bulletTimers.get(name).start();
 	}
 }

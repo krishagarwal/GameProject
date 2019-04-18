@@ -79,7 +79,7 @@ public class Client extends JPanel implements KeyListener, MouseListener
 				try
 				{
 					name = nameEnter.getText() + ServerConstants.NAME_SEPERATOR + InetAddress.getLocalHost() + System.currentTimeMillis();
-					socket = new Socket("192.168.1.2", ServerConstants.PORT_NUMBER);  // windows: 192.168.1.2, mac: 192.168.1.168
+					socket = new Socket("192.168.1.168", ServerConstants.PORT_NUMBER);  // windows: 192.168.1.2, mac: 192.168.1.168
 					Thread.sleep(1000);
 					Thread server = new Thread(new ServerThread());
 					server.start();
@@ -170,12 +170,14 @@ public class Client extends JPanel implements KeyListener, MouseListener
 							out.println(ServerConstants.DELETE_PLAYER + name);
 							waiting = true;
 						}
+						else if (!waiting && input.startsWith(ServerConstants.UPDATE_BULLET))
+							bullets.get(input.substring(ServerConstants.UPDATE_BULLET.length())).update();
 						else if (!waiting && input.startsWith(ServerConstants.UPDATE_PLAYER))
 							players.get(input.substring(ServerConstants.UPDATE_PLAYER.length(), input.indexOf('\0'))).setPlayer(input.substring(input.indexOf('\0') + 1));
 						else if (!waiting && input.startsWith(ServerConstants.TERMINATE_BULLET))
-							bullets.get(input.substring(ServerConstants.TERMINATE_BULLET.length())).remove(input.substring(ServerConstants.TERMINATE_BULLET.length()), bullets);
+							bullets.remove(input.substring(ServerConstants.TERMINATE_BULLET.length()));
 						else if (!waiting && input.startsWith(ServerConstants.CREATE_BULLET))
-							bullets.put(input.substring(ServerConstants.CREATE_BULLET.length(), input.indexOf('\0')), Bullet.getNewBullet(input.substring(input.indexOf('\0') + 1), outer, true));
+							bullets.put(input.substring(ServerConstants.CREATE_BULLET.length(), input.indexOf('\0')), Bullet.getNewBullet(input.substring(input.indexOf('\0') + 1)));
 						else if (!waiting && input.startsWith(ServerConstants.SET_TEAM))
 						{
 							player.team = input.substring(ServerConstants.SET_TEAM.length());

@@ -6,12 +6,13 @@ public final class ServerConstants
 	
 	// checked against using startsWith(), must appear last to first
 	public static final String ADD_PLAYER = 		"\1\1\1";
-	public static final String DELETE_PLAYER = 	"\1\1\1\1";
+	public static final String DELETE_PLAYER = 		"\1\1\1\1";
 	public static final String WAIT_BEFORE_PLAY = 	"\1\1\1\1\1";
 	public static final String SET_TEAM = 			"\1\1\1\1\1\1";
 	public static final String CREATE_BULLET = 		"\1\1\1\1\1\1\1";
 	public static final String TERMINATE_BULLET = 	"\1\1\1\1\1\1\1\1";
-	public static final String UPDATE_PLAYER = 	"\1\1\1\1\1\1\1\1\1";
+	public static final String UPDATE_PLAYER = 		"\1\1\1\1\1\1\1\1\1";
+	public static final String UPDATE_BULLET = 		"\1\1\1\1\1\1\1\1\1\1";
 
 	// used as a separator, must have special character
 	public static final String NAME_SEPERATOR = 	"\2";
