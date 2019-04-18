@@ -174,12 +174,10 @@ public class Server implements Runnable
 				sendToAll(ServerConstants.UPDATE_BULLET + name);
 				Player nearest = getNearestOpponent(toAdd.posX, toAdd.posY, toAdd.team);
 				if (nearest == null)
-				{
-					System.out.print("nearest is null");
 					return;
-				}
 				if (nearest.getDistanceTo(toAdd.posX, toAdd.posY) < ServerConstants.PLAYER_SIZE / 2 * Math.sqrt(2))
 				{
+					System.out.println("bullet termination");
 					bulletTimers.get(name).stop();
 					bulletTimers.remove(name);
 					sendToAll(ServerConstants.TERMINATE_BULLET + name);
