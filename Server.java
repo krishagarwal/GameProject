@@ -132,11 +132,8 @@ public class Server implements Runnable
 				else if (input.startsWith(ServerConstants.DELETE_PLAYER))
 					players.remove(input.substring(ServerConstants.DELETE_PLAYER.length()));
 				else if (input.startsWith(ServerConstants.ADD_PLAYER))
-				{
 					players.put(input.substring(ServerConstants.ADD_PLAYER.length(), input.indexOf('\0')), 
 						Player.getNewPlayer(input.substring(input.indexOf('\0') + 1)));
-						System.out.println(input.substring(ServerConstants.ADD_PLAYER.length(), input.indexOf(ServerConstants.NAME_SEPERATOR)));
-				}
 				sendToAll(input);
 			}
 		}
@@ -177,8 +174,12 @@ public class Server implements Runnable
 				sendToAll(ServerConstants.UPDATE_BULLET + name);
 				Player nearest = getNearestOpponent(toAdd.posX, toAdd.posY, toAdd.team);
 				if (nearest == null)
+				{
+					System.out.print("nearest is null");
 					return;
-				if (nearest.getDistanceTo(toAdd.posX, toAdd.posY) < ServerConstants.PLAYER_SIZE / 2 * Math.sqrt(2)) {
+				}
+				if (nearest.getDistanceTo(toAdd.posX, toAdd.posY) < ServerConstants.PLAYER_SIZE / 2 * Math.sqrt(2))
+				{
 					bulletTimers.get(name).stop();
 					bulletTimers.remove(name);
 					sendToAll(ServerConstants.TERMINATE_BULLET + name);

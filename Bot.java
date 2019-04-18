@@ -24,7 +24,8 @@ public class Bot
 				if (nearest == null)
 					return;
 				
-				if (bulletCount % 5 == 0)
+				// if (bulletCount % 5 == 0)
+				if (bulletCount == -1)
 				{
 					Server.sendToAll(ServerConstants.CREATE_BULLET + (name + bulletCount) + '\0' + 
 						Bullet.toString(player.posX, player.posY, nearest.posX, nearest.posY, team));
