@@ -43,6 +43,8 @@ public class Server implements Runnable
 				gamePlaying = true;
 				if (redCount < blueCount)
 					new Bot("red");
+				else if (blueCount < redCount)
+					new Bot("blue");
 			}
 		});
 
@@ -104,12 +106,13 @@ public class Server implements Runnable
 
 	public void run()
 	{
-		if (!gamePlaying && blueCount <= redCount)
+		int rand = (int)(Math.random() * 2);
+		if (!gamePlaying && (blueCount < redCount || (blueCount == redCount && rand == 0)))
 		{
 			out.println(ServerConstants.SET_TEAM + "blue");
 			blueCount++;
 		}
-		else if (!gamePlaying)
+		else if (!gamePlaying && (redCount < blueCount || (blueCount == redCount && rand == 1)))
 		{
 			out.println(ServerConstants.SET_TEAM + "red");
 			redCount++;
