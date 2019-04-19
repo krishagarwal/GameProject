@@ -133,7 +133,7 @@ public class Server implements Runnable
 					players.remove(input.substring(ServerConstants.DELETE_PLAYER.length()));
 				else if (input.startsWith(ServerConstants.ADD_PLAYER))
 					players.put(input.substring(ServerConstants.ADD_PLAYER.length(), input.indexOf('\0')), 
-						Player.getNewPlayer(input.substring(input.indexOf('\0') + 1)));
+						Player.getNewPlayer(input.substring(ServerConstants.ADD_PLAYER.length())));
 				sendToAll(input);
 			}
 		}
@@ -155,7 +155,7 @@ public class Server implements Runnable
 		Player nearest = null;
 		for (Player curr : players.values())
 		{
-			if (!curr.team.equals(team) && (nearest == null || curr.getDistanceTo(x, y) < nearest.getDistanceTo(nearest.posX, nearest.posY)))
+			if (!curr.team.equals(team) && (nearest == null || curr.getDistanceTo(x, y) < nearest.getDistanceTo(x, y)))
 				nearest = curr;
 		}
 		return nearest;
@@ -177,10 +177,17 @@ public class Server implements Runnable
 					return;
 				if (nearest.getDistanceTo(toAdd.posX, toAdd.posY) < ServerConstants.PLAYER_SIZE / 2 * Math.sqrt(2))
 				{
-					System.out.println("bullet termination");
 					bulletTimers.get(name).stop();
 					bulletTimers.remove(name);
 					sendToAll(ServerConstants.TERMINATE_BULLET + name);
+					nearest.decreaseHealth();
+					sendToAll(ServerConstants.DECREASE_PLAYER_HEALTH + nearest.name);
+					if (nearest.health == 0)
+					{
+						int newPosX = (int)(Math.random() * (ServerConstants.FRAME_SIZE - ServerConstants.PLAYER_SIZE * 3) + ServerConstants.PLAYER_SIZE * 1.5);
+						sendToAll(ServerConstants.REVIVE_PLAYER + nearest.name + '\0' + newPosX);
+						nearest.revive(newPosX);
+					}
 				}
 			}
 		}));

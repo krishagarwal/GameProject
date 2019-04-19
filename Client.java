@@ -105,7 +105,7 @@ public class Client extends JPanel implements KeyListener, MouseListener
 	{
 		super.paintComponent(g);
 		for (String playerName : players.keySet())
-			players.get(playerName).draw(g, playerName.substring(0, playerName.indexOf(ServerConstants.NAME_SEPERATOR)));
+			players.get(playerName).draw(g);
 		for (Bullet bullet : bullets.values())
 			bullet.draw(g);
 	}
@@ -164,8 +164,8 @@ public class Client extends JPanel implements KeyListener, MouseListener
 							int posY = ServerConstants.FRAME_SIZE - ServerConstants.PLAYER_SIZE;
 							if (team.equals("blue"))
 								posY = ServerConstants.PLAYER_SIZE;
-							out.println(ServerConstants.ADD_PLAYER + name + '\0' + Player.toString((int)(Math.random() * 
-								(ServerConstants.FRAME_SIZE - ServerConstants.PLAYER_SIZE * 3) + ServerConstants.PLAYER_SIZE * 1.5), posY, team));
+							out.println(ServerConstants.ADD_PLAYER + Player.toString((int)(Math.random() * (ServerConstants.FRAME_SIZE - 
+								ServerConstants.PLAYER_SIZE * 3) + ServerConstants.PLAYER_SIZE * 1.5), posY, name, team));
 						}
 						else if (input.equals(ServerConstants.GAME_IN_SESSION))
 						{
@@ -173,6 +173,11 @@ public class Client extends JPanel implements KeyListener, MouseListener
 							out.println(ServerConstants.DELETE_PLAYER + name);
 							waiting = true;
 						}
+						else if (input.startsWith(ServerConstants.REVIVE_PLAYER))
+							players.get(input.substring(ServerConstants.REVIVE_PLAYER.length(), 
+								input.indexOf('\0'))).revive(Integer.parseInt(input.substring(input.indexOf('\0') + 1)));
+						else if (input.startsWith(ServerConstants.DECREASE_PLAYER_HEALTH))
+							players.get(input.substring(ServerConstants.DECREASE_PLAYER_HEALTH.length())).decreaseHealth();
 						else if (!waiting && input.startsWith(ServerConstants.UPDATE_BULLET))
 							bullets.get(input.substring(ServerConstants.UPDATE_BULLET.length())).update();
 						else if (!waiting && input.startsWith(ServerConstants.MOVE_PLAYER_UP))
@@ -196,7 +201,7 @@ public class Client extends JPanel implements KeyListener, MouseListener
 							players.remove(input.substring(ServerConstants.DELETE_PLAYER.length()));
 						else if (!waiting && input.startsWith(ServerConstants.ADD_PLAYER))
 							players.put(input.substring(ServerConstants.ADD_PLAYER.length(), input.indexOf('\0')), 
-								Player.getNewPlayer(input.substring(input.indexOf('\0') + 1)));
+								Player.getNewPlayer(input.substring(ServerConstants.ADD_PLAYER.length())));
 						outer.repaint();
 					}
 				}

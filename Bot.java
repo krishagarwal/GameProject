@@ -13,8 +13,8 @@ public class Bot
 		if (team.equals("blue"))
 			posY = ServerConstants.PLAYER_SIZE;
 		name = "Bot" + ServerConstants.NAME_SEPERATOR;
-		Server.players.put(name, new Player(posX, posY, team));
-		Server.sendToAll(ServerConstants.ADD_PLAYER + name + '\0' + Player.toString(posX, posY, team));
+		Server.players.put(name, new Player(posX, posY, name, team));
+		Server.sendToAll(ServerConstants.ADD_PLAYER + Player.toString(posX, posY, name, team));
 		Timer mover = new Timer(85, new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -24,8 +24,7 @@ public class Bot
 				if (nearest == null)
 					return;
 				
-				// if (bulletCount % 5 == 0)
-				if (bulletCount == -1)
+				if (bulletCount % 5 == 0)
 				{
 					Server.sendToAll(ServerConstants.CREATE_BULLET + (name + bulletCount) + '\0' + 
 						Bullet.toString(player.posX, player.posY, nearest.posX, nearest.posY, team));
