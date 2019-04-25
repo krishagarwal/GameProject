@@ -26,7 +26,7 @@ public class Client extends JPanel implements KeyListener, MouseListener
 
 	static int bulletCount = 0;
 
-	public Client()
+	public Client(String ip)
 	{
 		waiting = false;
 		outer = this;
@@ -78,7 +78,7 @@ public class Client extends JPanel implements KeyListener, MouseListener
 				try
 				{
 					name = nameEnter.getText() + ServerConstants.NAME_SEPERATOR + InetAddress.getLocalHost() + System.currentTimeMillis();
-					socket = new Socket("192.168.1.168", ServerConstants.PORT_NUMBER);  // windows: 192.168.1.2, mac: 192.168.1.168
+					socket = new Socket(ip, ServerConstants.PORT_NUMBER);  // windows: 192.168.1.2, mac: 192.168.1.168
 					Thread.sleep(1000);
 					Thread server = new Thread(new ServerThread());
 					server.start();
@@ -98,7 +98,9 @@ public class Client extends JPanel implements KeyListener, MouseListener
 	}
 	public static void main(String[] args)
 	{
-		new Client();
+		Scanner reader = new Scanner(System.in);
+		System.out.print("Enter the IP address of the server you want to connect to: ");
+		new Client(reader.next());
 	}
 
 	public void paintComponent(Graphics g)
@@ -110,8 +112,8 @@ public class Client extends JPanel implements KeyListener, MouseListener
 			bullet.draw(g);
 	}
 
-	public void keyTyped(KeyEvent e) {}
-	public void keyReleased(KeyEvent e) {}
+	public void keyTyped(KeyEvent evt) {}
+	public void keyReleased(KeyEvent evt) {}
 
 	public void keyPressed(KeyEvent evt)
 	{
@@ -129,6 +131,7 @@ public class Client extends JPanel implements KeyListener, MouseListener
 	
 	public void mousePressed(MouseEvent e)
 	{
+		requestFocus();
 		Player player = players.get(name);
 		out.println(ServerConstants.CREATE_BULLET + (name + bulletCount) + '\0' + Bullet.toString(player.posX, player.posY, e.getX(), e.getY(), player.team));
 		bulletCount++;

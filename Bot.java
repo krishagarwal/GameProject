@@ -26,10 +26,10 @@ public class Bot
 				
 				if (bulletCount % 5 == 0)
 				{
-					Server.sendToAll(ServerConstants.CREATE_BULLET + (name + bulletCount) + '\0' + 
-						Bullet.toString(player.posX, player.posY, nearest.posX, nearest.posY, team));
-					Server.addBulletLog(ServerConstants.CREATE_BULLET + (name + bulletCount) + '\0' + 
-						Bullet.toString(player.posX, player.posY, nearest.posX, nearest.posY, team));
+					String input = (name + bulletCount) + '\0' + 
+						Bullet.toString(player.posX, player.posY, nearest.posX, nearest.posY, team);
+					Server.sendToAll(ServerConstants.CREATE_BULLET + input);
+					Server.addBulletLog(ServerConstants.CREATE_BULLET + input);
 				}
 				bulletCount++;
 

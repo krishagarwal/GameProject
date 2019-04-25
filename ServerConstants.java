@@ -18,7 +18,8 @@ public final class ServerConstants
 	public static final String UPDATE_BULLET = 			"\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	public static final String DECREASE_PLAYER_HEALTH = "\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	public static final String REVIVE_PLAYER = 			"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
-
+	public static final String DECREASE_TOWER_HEALTH = 	"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
+	
 	// used as a separator, must have special character
 	public static final String NAME_SEPERATOR = "\2";
 	
@@ -27,5 +28,6 @@ public final class ServerConstants
 	public static final int WAIT_TIME = 10;
 	public static final int BULLET_SIZE = 10;
 	public static final int PLAYER_SIZE = 50;
+	public static final int TOWER_SIZE = 75;
 	public static final int FRAME_SIZE = 600;
 }

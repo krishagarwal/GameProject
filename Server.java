@@ -1,7 +1,9 @@
 import javax.swing.*;
 import java.awt.event.*;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.io.IOException;
@@ -14,8 +16,7 @@ public class Server implements Runnable
 	static ArrayList<Server> clients;
 	static ConcurrentHashMap<String, Player> players;
 	static ConcurrentHashMap<String, Bullet> bullets;
-	static ConcurrentHashMap<String, Timer> bulletTimers;
-	static Timer waitTimer;
+	static Timer waitTimer, bulletTimer;
 	static int count;
 	static boolean gamePlaying;
 	static int redCount = 0, blueCount = 0;
@@ -25,11 +26,21 @@ public class Server implements Runnable
 	private PrintWriter out;
 	public static void main(String[] args)
 	{
+		System.out.println("Waiting for ip address...");
+		try
+		{
+			String ip = InetAddress.getLocalHost().toString();
+			System.out.println("Use this IP address to connect clients: " + ip.substring(ip.lastIndexOf('/') + 1));
+		}
+		catch(UnknownHostException e)
+		{
+			e.printStackTrace();
+		}
+
 		count = 0;
 		gamePlaying = false;
 		players = new ConcurrentHashMap<String, Player>();
 		bullets = new ConcurrentHashMap<String, Bullet>();
-		bulletTimers = new ConcurrentHashMap<String, Timer>();
 		waitTimer = new Timer(1000, new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -48,6 +59,36 @@ public class Server implements Runnable
 			}
 		});
 
+		bulletTimer = new Timer(10, new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				for (String name : bullets.keySet())
+				{
+					Bullet curr = bullets.get(name);
+					curr.update();
+					sendToAll(ServerConstants.UPDATE_BULLET + name);
+					Player nearest = getNearestOpponent(curr.posX, curr.posY, curr.team);
+					if (nearest == null)
+						return;
+					if (nearest.getDistanceTo(curr.posX, curr.posY) < ServerConstants.PLAYER_SIZE / 2 * Math.sqrt(2))
+					{
+						stopBullet(name);
+						nearest.decreaseHealth();
+						sendToAll(ServerConstants.DECREASE_PLAYER_HEALTH + nearest.name);
+						if (nearest.health == 0)
+						{
+							int newPosX = (int)(Math.random() * (ServerConstants.FRAME_SIZE - ServerConstants.PLAYER_SIZE * 3) + ServerConstants.PLAYER_SIZE * 1.5);
+							sendToAll(ServerConstants.REVIVE_PLAYER + nearest.name + '\0' + newPosX);
+							nearest.revive(newPosX);
+						}
+					}
+					else if (curr.posX > ServerConstants.FRAME_SIZE || curr.posX < 0 || curr.posY > ServerConstants.FRAME_SIZE || curr.posY < 0)
+						stopBullet(name);
+				}
+			}
+		});
+		bulletTimer.start();
 
 		serverSocket = null;
 		try
@@ -169,31 +210,11 @@ public class Server implements Runnable
 		String name = input.substring(ServerConstants.CREATE_BULLET.length(), input.indexOf('\0'));
 		Bullet toAdd = Bullet.getNewBullet(input.substring(input.indexOf('\0') + 1));
 		bullets.put(name, toAdd);
-		bulletTimers.put(name, new Timer(10, new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				toAdd.update();
-				sendToAll(ServerConstants.UPDATE_BULLET + name);
-				Player nearest = getNearestOpponent(toAdd.posX, toAdd.posY, toAdd.team);
-				if (nearest == null)
-					return;
-				if (nearest.getDistanceTo(toAdd.posX, toAdd.posY) < ServerConstants.PLAYER_SIZE / 2 * Math.sqrt(2))
-				{
-					bulletTimers.get(name).stop();
-					bulletTimers.remove(name);
-					sendToAll(ServerConstants.TERMINATE_BULLET + name);
-					nearest.decreaseHealth();
-					sendToAll(ServerConstants.DECREASE_PLAYER_HEALTH + nearest.name);
-					if (nearest.health == 0)
-					{
-						int newPosX = (int)(Math.random() * (ServerConstants.FRAME_SIZE - ServerConstants.PLAYER_SIZE * 3) + ServerConstants.PLAYER_SIZE * 1.5);
-						sendToAll(ServerConstants.REVIVE_PLAYER + nearest.name + '\0' + newPosX);
-						nearest.revive(newPosX);
-					}
-				}
-			}
-		}));
-		bulletTimers.get(name).start();
+	}
+
+	public static void stopBullet(String name)
+	{
+		bullets.remove(name);
+		sendToAll(ServerConstants.TERMINATE_BULLET + name);
 	}
 }
