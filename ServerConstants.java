@@ -25,7 +25,7 @@ public final class ServerConstants
 	
 	// constant numerical fields
 	public static final int PORT_NUMBER = 4444;
-	public static final int WAIT_TIME = 10;
+	public static final int WAIT_TIME = 3;
 	public static final int BULLET_SIZE = 10;
 	public static final int PLAYER_SIZE = 50;
 	public static final int TOWER_SIZE = 75;

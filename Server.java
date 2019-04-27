@@ -27,15 +27,7 @@ public class Server implements Runnable
 	public static void main(String[] args)
 	{
 		System.out.println("Waiting for ip address...");
-		try
-		{
-			String ip = InetAddress.getLocalHost().toString();
-			System.out.println("Use this IP address to connect clients: " + ip.substring(ip.lastIndexOf('/') + 1));
-		}
-		catch(UnknownHostException e)
-		{
-			e.printStackTrace();
-		}
+		System.out.println("Connect clients using this IP address: " + getLocalHost());
 
 		count = 0;
 		gamePlaying = false;
@@ -83,7 +75,7 @@ public class Server implements Runnable
 							nearest.revive(newPosX);
 						}
 					}
-					else if (curr.posX > ServerConstants.FRAME_SIZE || curr.posX < 0 || curr.posY > ServerConstants.FRAME_SIZE || curr.posY < 0)
+					else if (curr.posX > 1000 || curr.posX < 0 || curr.posY > 1000 || curr.posY < 0)
 						stopBullet(name);
 				}
 			}
@@ -164,13 +156,13 @@ public class Server implements Runnable
 			{
 				String input = in.nextLine();
 				if (input.startsWith(ServerConstants.MOVE_PLAYER_UP))
-					players.get(input.substring(ServerConstants.MOVE_PLAYER_UP.length())).posY -= 2;
+					players.get(input.substring(ServerConstants.MOVE_PLAYER_UP.length())).moveUp();
 				else if (input.startsWith(ServerConstants.MOVE_PLAYER_DOWN))
-					players.get(input.substring(ServerConstants.MOVE_PLAYER_DOWN.length())).posY += 2;
+					players.get(input.substring(ServerConstants.MOVE_PLAYER_DOWN.length())).moveDown();
 				else if (input.startsWith(ServerConstants.MOVE_PLAYER_LEFT))
-					players.get(input.substring(ServerConstants.MOVE_PLAYER_LEFT.length())).posX -= 2;
+					players.get(input.substring(ServerConstants.MOVE_PLAYER_LEFT.length())).moveLeft();
 				else if (input.startsWith(ServerConstants.MOVE_PLAYER_RIGHT))
-					players.get(input.substring(ServerConstants.MOVE_PLAYER_RIGHT.length())).posX += 2;
+					players.get(input.substring(ServerConstants.MOVE_PLAYER_RIGHT.length())).moveRight();
 				else if (input.startsWith(ServerConstants.CREATE_BULLET))
 					addBulletLog(input);
 				else if (input.startsWith(ServerConstants.DELETE_PLAYER))
@@ -216,5 +208,20 @@ public class Server implements Runnable
 	{
 		bullets.remove(name);
 		sendToAll(ServerConstants.TERMINATE_BULLET + name);
+	}
+
+	public static String getLocalHost()
+	{
+		String ip = "";
+		try
+		{
+			ip = InetAddress.getLocalHost().toString();
+			ip = ip.substring(ip.indexOf('/') + 1);
+		}
+		catch(UnknownHostException e)
+		{
+			e.printStackTrace();
+		}
+		return ip;
 	}
 }

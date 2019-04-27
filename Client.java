@@ -12,7 +12,7 @@ import java.util.Scanner;
 public class Client extends JPanel implements KeyListener, MouseListener
 {
 	private Socket socket;
-	private String name;
+	private String name, team;
 	ConcurrentHashMap<String, Player> players;
 	ConcurrentHashMap<String, Bullet> bullets;
 	private Scanner serverIn;
@@ -22,12 +22,18 @@ public class Client extends JPanel implements KeyListener, MouseListener
 	JLabel waitTime;
 	JFrame frame;
 	boolean waiting;
-	String team;
+	Board gameBoard;
 
 	static int bulletCount = 0;
 
-	public Client(String ip)
+	public Client(String ipAddress)
 	{
+		final String ip;
+		if (ipAddress.equals(""))
+			ip = Server.getLocalHost();
+		else
+			ip = ipAddress;
+		gameBoard = new Board();
 		waiting = false;
 		outer = this;
 		players = new ConcurrentHashMap<String, Player>();
@@ -78,7 +84,7 @@ public class Client extends JPanel implements KeyListener, MouseListener
 				try
 				{
 					name = nameEnter.getText() + ServerConstants.NAME_SEPERATOR + InetAddress.getLocalHost() + System.currentTimeMillis();
-					socket = new Socket(ip, ServerConstants.PORT_NUMBER);  // windows: 192.168.1.2, mac: 192.168.1.168
+					socket = new Socket(ip, ServerConstants.PORT_NUMBER);
 					Thread.sleep(1000);
 					Thread server = new Thread(new ServerThread());
 					server.start();
@@ -99,17 +105,23 @@ public class Client extends JPanel implements KeyListener, MouseListener
 	public static void main(String[] args)
 	{
 		Scanner reader = new Scanner(System.in);
-		System.out.print("Enter the IP address of the server you want to connect to: ");
-		new Client(reader.next());
+		System.out.print("Enter the IP address of the server you want to connect to (press enter if Server is being run on this computer): ");
+		new Client(reader.nextLine());
 	}
 
 	public void paintComponent(Graphics g)
 	{
 		super.paintComponent(g);
-		for (String playerName : players.keySet())
-			players.get(playerName).draw(g);
+		Player me = players.get(name);
+		if (me == null)
+			return;
+		int refX = (me.posX - 300) % 40 * -1;
+		int refY = (me.posY - 300) % 40 * -1;
+		gameBoard.drawBoard(g, (me.posX - 300) / 40, (me.posX - 300) / 40 + 15, (me.posY - 300) / 40, (me.posY - 300) / 40 + 15, refX, refY);
+		for (Player curr : players.values())
+			curr.draw(g, me.posX, me.posY);
 		for (Bullet bullet : bullets.values())
-			bullet.draw(g);
+			bullet.draw(g, me.posX, me.posY);
 	}
 
 	public void keyTyped(KeyEvent evt) {}
@@ -133,7 +145,8 @@ public class Client extends JPanel implements KeyListener, MouseListener
 	{
 		requestFocus();
 		Player player = players.get(name);
-		out.println(ServerConstants.CREATE_BULLET + (name + bulletCount) + '\0' + Bullet.toString(player.posX, player.posY, e.getX(), e.getY(), player.team));
+		out.println(ServerConstants.CREATE_BULLET + (name + bulletCount) + '\0' + 
+			Bullet.toString(player.posX, player.posY, e.getX() - 300 + player.posX, e.getY() - 300 + player.posY, player.team));
 		bulletCount++;
 	}
 
@@ -164,11 +177,12 @@ public class Client extends JPanel implements KeyListener, MouseListener
 							outer.requestFocus();
 							outer.addKeyListener(outer);
 							outer.addMouseListener(outer);
-							int posY = ServerConstants.FRAME_SIZE - ServerConstants.PLAYER_SIZE;
+							int posY = 1000 - ServerConstants.PLAYER_SIZE;
 							if (team.equals("blue"))
 								posY = ServerConstants.PLAYER_SIZE;
-							out.println(ServerConstants.ADD_PLAYER + Player.toString((int)(Math.random() * (ServerConstants.FRAME_SIZE - 
+							out.println(ServerConstants.ADD_PLAYER + Player.toString((int)(Math.random() * (1000 - 
 								ServerConstants.PLAYER_SIZE * 3) + ServerConstants.PLAYER_SIZE * 1.5), posY, name, team));
+							System.out.println("sent");
 						}
 						else if (input.equals(ServerConstants.GAME_IN_SESSION))
 						{
@@ -182,15 +196,19 @@ public class Client extends JPanel implements KeyListener, MouseListener
 						else if (input.startsWith(ServerConstants.DECREASE_PLAYER_HEALTH))
 							players.get(input.substring(ServerConstants.DECREASE_PLAYER_HEALTH.length())).decreaseHealth();
 						else if (!waiting && input.startsWith(ServerConstants.UPDATE_BULLET))
-							bullets.get(input.substring(ServerConstants.UPDATE_BULLET.length())).update();
+						{
+							Bullet curr = bullets.get(input.substring(ServerConstants.UPDATE_BULLET.length()));
+							if (curr != null)
+								curr.update();
+						}
 						else if (!waiting && input.startsWith(ServerConstants.MOVE_PLAYER_UP))
-							players.get(input.substring(ServerConstants.MOVE_PLAYER_UP.length())).posY -= 2;
+							players.get(input.substring(ServerConstants.MOVE_PLAYER_UP.length())).moveUp();
 						else if (!waiting && input.startsWith(ServerConstants.MOVE_PLAYER_DOWN))
-							players.get(input.substring(ServerConstants.MOVE_PLAYER_DOWN.length())).posY += 2;
+							players.get(input.substring(ServerConstants.MOVE_PLAYER_DOWN.length())).moveDown();
 						else if (!waiting && input.startsWith(ServerConstants.MOVE_PLAYER_LEFT))
-							players.get(input.substring(ServerConstants.MOVE_PLAYER_LEFT.length())).posX -= 2;
+							players.get(input.substring(ServerConstants.MOVE_PLAYER_LEFT.length())).moveLeft();
 						else if (!waiting && input.startsWith(ServerConstants.MOVE_PLAYER_RIGHT))
-							players.get(input.substring(ServerConstants.MOVE_PLAYER_RIGHT.length())).posX += 2;
+							players.get(input.substring(ServerConstants.MOVE_PLAYER_RIGHT.length())).moveRight();
 						else if (!waiting && input.startsWith(ServerConstants.TERMINATE_BULLET))
 							bullets.remove(input.substring(ServerConstants.TERMINATE_BULLET.length()));
 						else if (!waiting && input.startsWith(ServerConstants.CREATE_BULLET))

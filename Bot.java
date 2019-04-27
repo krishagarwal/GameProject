@@ -8,8 +8,8 @@ public class Bot
 
 	public Bot(String team)
 	{
-		int posX = (int)(Math.random() * (ServerConstants.FRAME_SIZE - ServerConstants.PLAYER_SIZE * 3) + ServerConstants.PLAYER_SIZE * 1.5);
-		int posY = ServerConstants.FRAME_SIZE - ServerConstants.PLAYER_SIZE;
+		int posX = (int)(Math.random() * (1000 - ServerConstants.PLAYER_SIZE * 3) + ServerConstants.PLAYER_SIZE * 1.5);
+		int posY = 1000 - ServerConstants.PLAYER_SIZE;
 		if (team.equals("blue"))
 			posY = ServerConstants.PLAYER_SIZE;
 		name = "Bot" + ServerConstants.NAME_SEPERATOR;
@@ -24,7 +24,7 @@ public class Bot
 				if (nearest == null)
 					return;
 				
-				if (bulletCount % 5 == 0)
+				if (bulletCount % 5 == 6)
 				{
 					String input = (name + bulletCount) + '\0' + 
 						Bullet.toString(player.posX, player.posY, nearest.posX, nearest.posY, team);
