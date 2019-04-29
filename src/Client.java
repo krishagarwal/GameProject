@@ -17,13 +17,13 @@ public class Client extends JPanel implements KeyListener, MouseListener
 	ConcurrentHashMap<String, Bullet> bullets;
 	private Scanner serverIn;
 	PrintWriter out;
-	Client outer;
 	JPanel waitPanel;
 	JLabel waitTime;
 	JFrame frame;
 	boolean waiting;
 	Board gameBoard;
 
+	static Client outer;
 	static int bulletCount = 0;
 
 	public Client(String ipAddress)
@@ -115,9 +115,12 @@ public class Client extends JPanel implements KeyListener, MouseListener
 		Player me = players.get(name);
 		if (me == null)
 			return;
-		int refX = (me.posX - 300) % 40 * -1;
-		int refY = (me.posY - 300) % 40 * -1;
-		gameBoard.drawBoard(g, (me.posX - 300) / 40, (me.posX - 300) / 40 + 15, (me.posY - 300) / 40, (me.posY - 300) / 40 + 15, refX, refY);
+		int refX = (me.posX - ServerConstants.FRAME_SIZE / 2) % ServerConstants.FRAGMENT_SIZE * -1 - ServerConstants.FRAGMENT_SIZE;
+		int refY = (me.posY - ServerConstants.FRAME_SIZE / 2) % ServerConstants.FRAGMENT_SIZE * -1 - ServerConstants.FRAGMENT_SIZE;
+		gameBoard.drawBoard(g, (me.posY - ServerConstants.FRAME_SIZE / 2) / ServerConstants.FRAGMENT_SIZE - 1, 
+			(me.posY - ServerConstants.FRAME_SIZE / 2) / ServerConstants.FRAGMENT_SIZE + 16, 
+			(me.posX - ServerConstants.FRAME_SIZE / 2) / ServerConstants.FRAGMENT_SIZE - 1, 
+			(me.posX - ServerConstants.FRAME_SIZE / 2) / ServerConstants.FRAGMENT_SIZE + 16, refX, refY);
 		for (Player curr : players.values())
 			curr.draw(g, me.posX, me.posY);
 		for (Bullet bullet : bullets.values())
@@ -146,7 +149,8 @@ public class Client extends JPanel implements KeyListener, MouseListener
 		requestFocus();
 		Player player = players.get(name);
 		out.println(ServerConstants.CREATE_BULLET + (name + bulletCount) + '\0' + 
-			Bullet.toString(player.posX, player.posY, e.getX() - 300 + player.posX, e.getY() - 300 + player.posY, player.team));
+			Bullet.toString(player.posX, player.posY, e.getX() - ServerConstants.FRAME_SIZE / 2 + player.posX,
+				e.getY() - ServerConstants.FRAME_SIZE / 2 + player.posY, player.team));
 		bulletCount++;
 	}
 
@@ -177,12 +181,11 @@ public class Client extends JPanel implements KeyListener, MouseListener
 							outer.requestFocus();
 							outer.addKeyListener(outer);
 							outer.addMouseListener(outer);
-							int posY = 1000 - ServerConstants.PLAYER_SIZE;
+							int posY = ServerConstants.BOARD_SIZE - ServerConstants.FRAGMENT_SIZE * 2;
 							if (team.equals("blue"))
-								posY = ServerConstants.PLAYER_SIZE;
-							out.println(ServerConstants.ADD_PLAYER + Player.toString((int)(Math.random() * (1000 - 
-								ServerConstants.PLAYER_SIZE * 3) + ServerConstants.PLAYER_SIZE * 1.5), posY, name, team));
-							System.out.println("sent");
+								posY = ServerConstants.FRAGMENT_SIZE * 2;
+							out.println(ServerConstants.ADD_PLAYER + Player.toString((int)(Math.random() * (ServerConstants.BOARD_SIZE -
+								ServerConstants.FRAGMENT_SIZE * 3) + 1.5 * ServerConstants.FRAGMENT_SIZE) / 5 * 5, posY, name, team));
 						}
 						else if (input.equals(ServerConstants.GAME_IN_SESSION))
 						{

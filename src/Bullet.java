@@ -58,8 +58,8 @@ public class Bullet
 
 	public void draw(Graphics g, int refX, int refY)
 	{
-		int posX = this.posX + 300 - refX;
-		int posY = this.posY + 300 - refY;
+		int posX = this.posX + ServerConstants.FRAME_SIZE / 2 - refX;
+		int posY = this.posY + ServerConstants.FRAME_SIZE / 2 - refY;
 		g.setColor(Color.RED);
 		if (team.equals("blue"))
 			g.setColor(Color.BLUE);

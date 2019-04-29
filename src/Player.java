@@ -1,11 +1,14 @@
 import java.awt.*;
+import java.awt.event.*;
 import javax.swing.*;
 
 public class Player
 {
 	String name, team;
-	int posX, posY, health;
+	int posX, posY, health, blinkerCount;
 	Image front, back, left, right, costume;
+	Timer blinker;
+	boolean show;
 
 	public Player(int posX, int posY, String name, String team)
 	{
@@ -13,14 +16,28 @@ public class Player
 		this.posY = posY;
 		this.team = team;
 		this.name = name;
-		front = new ImageIcon(team + "_front.png").getImage();
-		back = new ImageIcon(team + "_back.png").getImage();
-		left = new ImageIcon(team + "_left.png").getImage();
-		right = new ImageIcon(team + "_right.png").getImage();
+		front = new ImageIcon("../images/" + team + "_front.png").getImage();
+		back = new ImageIcon("../images/" + team + "_back.png").getImage();
+		left = new ImageIcon("../images/" + team + "_left.png").getImage();
+		right = new ImageIcon("../images/" + team + "_right.png").getImage();
 		costume = back;
 		if (team.equals("blue"))
 			costume = front;
-		health = 100;
+		health = ServerConstants.HEALTH;
+		show = true;
+		blinkerCount = 0;
+		blinker = new Timer(250, new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				show = !show;
+				blinkerCount++;
+				if (Client.outer != null)
+					Client.outer.repaint();
+				if (blinkerCount == 8)
+					blinker.stop();
+			}
+		});
 	}
 
 	public static Player getNewPlayer(String input)
@@ -46,58 +63,62 @@ public class Player
 
 	public void decreaseHealth()
 	{
-		health -= 5;
+		health -= ServerConstants.HEALTH_DECREASE;
 	}
 
 	public void moveLeft()
 	{
-		posX -= 2;
+		posX -= ServerConstants.MOVE_LENGTH;
 		costume = left;
 	}
 
 	public void moveRight()
 	{
-		posX += 2;
+		posX += ServerConstants.MOVE_LENGTH;
 		costume = right;
 	}
 
 	public void moveUp()
 	{
-		posY -= 2;
+		posY -= ServerConstants.MOVE_LENGTH;
 		costume = back;
 	}
 
 	public void moveDown()
 	{
-		posY += 2;
+		posY += ServerConstants.MOVE_LENGTH;
 		costume = front;
 	}
 
 	public void revive(int newPosX)
 	{
-		posY = ServerConstants.FRAME_SIZE - ServerConstants.PLAYER_SIZE;
+		posY = ServerConstants.BOARD_SIZE - ServerConstants.FRAGMENT_SIZE * 2;
 		if (team.equals("blue"))
-			posY = ServerConstants.PLAYER_SIZE;
+			posY = ServerConstants.FRAGMENT_SIZE * 2;
 		posX = newPosX;
-		health = 100;
+		health = ServerConstants.HEALTH;
+		blinkerCount = 0;
+		blinker.start();
 	}
 
 	public void draw(Graphics g, int refX, int refY)
 	{
+		if (!show)
+			return;
 		g.setColor(new Color(255, 132, 132, 80));
-		int posX = this.posX + 300 - refX;
-		int posY = this.posY + 300 - refY;
+		int posX = this.posX + ServerConstants.FRAME_SIZE / 2 - refX;
+		int posY = this.posY + ServerConstants.FRAME_SIZE / 2 - refY;
 		if (team.equals("blue"))
 			g.setColor(new Color(147, 197, 255, 80));
-		// g.fillRect(posX - ServerConstants.PLAYER_SIZE / 2, posY - ServerConstants.PLAYER_SIZE / 2, ServerConstants.PLAYER_SIZE, ServerConstants.PLAYER_SIZE);
-		g.drawImage(costume, posX - ServerConstants.PLAYER_SIZE / 2, posY - ServerConstants.PLAYER_SIZE / 2, ServerConstants.PLAYER_SIZE, ServerConstants.PLAYER_SIZE, null);
+		g.drawImage(costume, posX - ServerConstants.FRAGMENT_SIZE / 2, posY - ServerConstants.FRAGMENT_SIZE / 2, 
+			ServerConstants.FRAGMENT_SIZE, ServerConstants.FRAGMENT_SIZE, null);
 		g.setColor(new Color(235 - (int)(health * 1.5), 35 + 2 * health, (int)(35 + health * 0.7)));
-		g.fillRect(posX - ServerConstants.PLAYER_SIZE / 2, posY - ServerConstants.PLAYER_SIZE / 2 - 25, (int)(ServerConstants.PLAYER_SIZE / 100.0 * health), 5);
+		g.fillRect(posX - ServerConstants.FRAGMENT_SIZE / 2, posY - ServerConstants.FRAGMENT_SIZE / 2 - 25,
+			(int)(ServerConstants.FRAGMENT_SIZE / (double)(ServerConstants.HEALTH) * health), 5);
 		g.setColor(Color.BLACK);
 		String displayName = name.substring(0, name.indexOf(ServerConstants.NAME_SEPERATOR));
 		g.drawString(displayName, posX - (int)(g.getFontMetrics().getStringBounds(displayName, g).getWidth()) / 2, 
-			posY - ServerConstants.PLAYER_SIZE / 2 - 5);
-		// g.drawRect(posX - ServerConstants.PLAYER_SIZE / 2, posY - ServerConstants.PLAYER_SIZE / 2, ServerConstants.PLAYER_SIZE, ServerConstants.PLAYER_SIZE);
-		g.drawRect(posX - ServerConstants.PLAYER_SIZE / 2, posY - ServerConstants.PLAYER_SIZE / 2 - 25, ServerConstants.PLAYER_SIZE, 5);
+			posY - ServerConstants.FRAGMENT_SIZE / 2 - 5);
+		g.drawRect(posX - ServerConstants.FRAGMENT_SIZE / 2, posY - ServerConstants.FRAGMENT_SIZE / 2 - 25, ServerConstants.FRAGMENT_SIZE, 5);
 	}
 }

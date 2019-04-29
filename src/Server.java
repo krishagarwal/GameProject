@@ -20,10 +20,11 @@ public class Server implements Runnable
 	static int count;
 	static boolean gamePlaying;
 	static int redCount = 0, blueCount = 0;
-
 	private Socket socket;
 	private Scanner in;
 	private PrintWriter out;
+	static Board gameBoard;
+
 	public static void main(String[] args)
 	{
 		System.out.println("Waiting for ip address...");
@@ -33,6 +34,7 @@ public class Server implements Runnable
 		gamePlaying = false;
 		players = new ConcurrentHashMap<String, Player>();
 		bullets = new ConcurrentHashMap<String, Bullet>();
+		gameBoard = new Board();
 		waitTimer = new Timer(1000, new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -43,6 +45,7 @@ public class Server implements Runnable
 					return;
 				waitTimer.stop();
 				sendToAll(ServerConstants.READY_TO_PLAY);
+				bulletTimer.start();
 				gamePlaying = true;
 				if (redCount < blueCount)
 					new Bot("red");
@@ -63,24 +66,24 @@ public class Server implements Runnable
 					Player nearest = getNearestOpponent(curr.posX, curr.posY, curr.team);
 					if (nearest == null)
 						return;
-					if (nearest.getDistanceTo(curr.posX, curr.posY) < ServerConstants.PLAYER_SIZE / 2 * Math.sqrt(2))
+					if (nearest.getDistanceTo(curr.posX, curr.posY) < ServerConstants.FRAGMENT_SIZE / 2 * Math.sqrt(2))
 					{
 						stopBullet(name);
 						nearest.decreaseHealth();
 						sendToAll(ServerConstants.DECREASE_PLAYER_HEALTH + nearest.name);
 						if (nearest.health == 0)
 						{
-							int newPosX = (int)(Math.random() * (ServerConstants.FRAME_SIZE - ServerConstants.PLAYER_SIZE * 3) + ServerConstants.PLAYER_SIZE * 1.5);
+							int newPosX = (int)(Math.random() * (ServerConstants.BOARD_SIZE - ServerConstants.FRAGMENT_SIZE * 3)
+								+ 1.5 * ServerConstants.FRAGMENT_SIZE) / 5 * 5;
 							sendToAll(ServerConstants.REVIVE_PLAYER + nearest.name + '\0' + newPosX);
 							nearest.revive(newPosX);
 						}
 					}
-					else if (curr.posX > 1000 || curr.posX < 0 || curr.posY > 1000 || curr.posY < 0)
+					else if (gameBoard.total[curr.posY / ServerConstants.FRAGMENT_SIZE][curr.posX / ServerConstants.FRAGMENT_SIZE] == 't')
 						stopBullet(name);
 				}
 			}
 		});
-		bulletTimer.start();
 
 		serverSocket = null;
 		try
@@ -154,15 +157,40 @@ public class Server implements Runnable
 		{
 			if (in.hasNext())
 			{
+				boolean sendInfo = true;
 				String input = in.nextLine();
 				if (input.startsWith(ServerConstants.MOVE_PLAYER_UP))
-					players.get(input.substring(ServerConstants.MOVE_PLAYER_UP.length())).moveUp();
+				{
+					Player curr = players.get(input.substring(ServerConstants.MOVE_PLAYER_UP.length()));
+					if (!gameBoard.isAbove(curr.posX, curr.posY))
+						curr.moveUp();
+					else
+						sendInfo = false;
+				}
 				else if (input.startsWith(ServerConstants.MOVE_PLAYER_DOWN))
-					players.get(input.substring(ServerConstants.MOVE_PLAYER_DOWN.length())).moveDown();
+				{
+					Player curr = players.get(input.substring(ServerConstants.MOVE_PLAYER_DOWN.length()));
+					if (!gameBoard.isBelow(curr.posX, curr.posY))
+						curr.moveDown();
+					else
+						sendInfo = false;
+				}
 				else if (input.startsWith(ServerConstants.MOVE_PLAYER_LEFT))
-					players.get(input.substring(ServerConstants.MOVE_PLAYER_LEFT.length())).moveLeft();
+				{
+					Player curr = players.get(input.substring(ServerConstants.MOVE_PLAYER_LEFT.length()));
+					if (!gameBoard.isLeft(curr.posX, curr.posY))
+						curr.moveLeft();
+					else
+						sendInfo = false;
+				}
 				else if (input.startsWith(ServerConstants.MOVE_PLAYER_RIGHT))
-					players.get(input.substring(ServerConstants.MOVE_PLAYER_RIGHT.length())).moveRight();
+				{
+					Player curr = players.get(input.substring(ServerConstants.MOVE_PLAYER_RIGHT.length()));
+					if (!gameBoard.isRight(curr.posX, curr.posY))
+						curr.moveRight();
+					else
+						sendInfo = false;
+				}
 				else if (input.startsWith(ServerConstants.CREATE_BULLET))
 					addBulletLog(input);
 				else if (input.startsWith(ServerConstants.DELETE_PLAYER))
@@ -170,7 +198,8 @@ public class Server implements Runnable
 				else if (input.startsWith(ServerConstants.ADD_PLAYER))
 					players.put(input.substring(ServerConstants.ADD_PLAYER.length(), input.indexOf('\0')), 
 						Player.getNewPlayer(input.substring(ServerConstants.ADD_PLAYER.length())));
-				sendToAll(input);
+				if (sendInfo)
+					sendToAll(input);
 			}
 		}
 	}

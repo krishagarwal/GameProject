@@ -27,7 +27,13 @@ public final class ServerConstants
 	public static final int PORT_NUMBER = 4444;
 	public static final int WAIT_TIME = 3;
 	public static final int BULLET_SIZE = 10;
-	public static final int PLAYER_SIZE = 50;
 	public static final int TOWER_SIZE = 75;
 	public static final int FRAME_SIZE = 600;
+	public static final int BOARD_SIZE = 1350;
+	public static final int BOARD_FRAGMENTS = 27;
+	public static final int FRAGMENT_SIZE = BOARD_SIZE / BOARD_FRAGMENTS;
+	public static final int HEALTH = 100;
+	public static final int HEALTH_DECREASE = 5;
+	public static final int MOVE_LENGTH = 5;
+	public static final int WALL_THICKNESS = 5;
 }
