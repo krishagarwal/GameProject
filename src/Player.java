@@ -32,8 +32,8 @@ public class Player
 			{
 				show = !show;
 				blinkerCount++;
-				if (Client.outer != null)
-					Client.outer.repaint();
+				if (Client.gamePanel != null)
+					Client.gamePanel.repaint();
 				if (blinkerCount == 8)
 					blinker.stop();
 			}

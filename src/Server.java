@@ -27,8 +27,15 @@ public class Server implements Runnable
 
 	public static void main(String[] args)
 	{
-		System.out.println("Waiting for ip address...");
-		System.out.println("Connect clients using this IP address: " + getLocalHost());
+		Thread message = new Thread(new Runnable()
+		{
+			public void run()
+			{
+				ServerConstants.showMessage(null, "Play with your friends!", "Connect clients using this IP address: " +
+					ServerConstants.getLocalHost(null, "The server is not connected to the internet. Please reconnect and try again."));
+			}
+		});
+		message.start();
 
 		count = 0;
 		gamePlaying = false;
@@ -237,20 +244,5 @@ public class Server implements Runnable
 	{
 		bullets.remove(name);
 		sendToAll(ServerConstants.TERMINATE_BULLET + name);
-	}
-
-	public static String getLocalHost()
-	{
-		String ip = "";
-		try
-		{
-			ip = InetAddress.getLocalHost().toString();
-			ip = ip.substring(ip.indexOf('/') + 1);
-		}
-		catch(UnknownHostException e)
-		{
-			e.printStackTrace();
-		}
-		return ip;
 	}
 }

@@ -5,85 +5,49 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Scanner;
 
-public class Client extends JPanel implements KeyListener, MouseListener
+public class Client
 {
 	private Socket socket;
-	private String name, team;
+	static String playerName;
+	String team;
 	ConcurrentHashMap<String, Player> players;
 	ConcurrentHashMap<String, Bullet> bullets;
 	private Scanner serverIn;
-	PrintWriter out;
-	JPanel waitPanel;
+	static PrintWriter out;
+	private final static String START = "start";
+	private final static String WAIT = "wait";
+	private final static String GAME = "game";
+	JPanel startPanel, waitPanel, parentPanel;
+	static GamePanel gamePanel;
 	JLabel waitTime;
 	JFrame frame;
 	boolean waiting;
-	Board gameBoard;
-
-	static Client outer;
 	static int bulletCount = 0;
+	CardLayout cl;
 
-	public Client(String ipAddress)
+	public Client()
 	{
-		final String ip;
-		if (ipAddress.equals(""))
-			ip = Server.getLocalHost();
-		else
-			ip = ipAddress;
-		gameBoard = new Board();
 		waiting = false;
-		outer = this;
 		players = new ConcurrentHashMap<String, Player>();
 		bullets = new ConcurrentHashMap<String, Bullet>();
-		
-		frame = new JFrame();
-		frame.setSize(ServerConstants.FRAME_SIZE, ServerConstants.FRAME_SIZE);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-		JPanel start = new JPanel();
-		JTextField nameEnter = new JTextField();
+		startPanel = new JPanel();
 		JButton play = new JButton("Play");
-		nameEnter.setPreferredSize(new Dimension(100, 20));
-		start.add(nameEnter);
-		start.add(play);
-
-		frame.setContentPane(start);
-		frame.setVisible(true);
-
-		waitPanel = new JPanel(new BorderLayout());
-		waitTime = new JLabel("", JLabel.CENTER);
-		waitPanel.add(waitTime, BorderLayout.CENTER);
-
+		startPanel.add(play);
 		play.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
 			{
 				socket = null;
-				frame.setContentPane(waitPanel);
-				frame.validate();
-				frame.repaint();
-
-				frame.addWindowListener(new WindowListener()
-				{
-					public void windowOpened(WindowEvent e) {}
-					public void windowIconified(WindowEvent e) {}
-					public void windowDeiconified(WindowEvent e) {}
-					public void windowDeactivated(WindowEvent e) {}
-					public void windowClosed(WindowEvent e) {}
-					public void windowActivated(WindowEvent e) {}
-
-					public void windowClosing(WindowEvent e)
-					{
-						out.println(ServerConstants.DELETE_PLAYER + name);
-					}
-				});
-
 				try
 				{
-					name = nameEnter.getText() + ServerConstants.NAME_SEPERATOR + InetAddress.getLocalHost() + System.currentTimeMillis();
+					String ip = ServerConstants.getFromMessage(frame, "Enter IP Address of Server", "IP (skip if on same machine)",
+						ServerConstants.getLocalHost(frame, "You do not seem to be connected to the internet. Reconnect and try again."));
 					socket = new Socket(ip, ServerConstants.PORT_NUMBER);
 					Thread.sleep(1000);
 					Thread server = new Thread(new ServerThread());
@@ -99,66 +63,65 @@ public class Client extends JPanel implements KeyListener, MouseListener
 					System.err.println("Fatal connection error");
 					ie.printStackTrace();
 				}
+
+				cl.show(parentPanel, WAIT);
+				frame.addWindowListener(new WindowListener()
+				{
+					public void windowOpened(WindowEvent e) {}
+					public void windowIconified(WindowEvent e) {}
+					public void windowDeiconified(WindowEvent e) {}
+					public void windowDeactivated(WindowEvent e) {}
+					public void windowClosed(WindowEvent e) {}
+					public void windowActivated(WindowEvent e) {}
+
+					public void windowClosing(WindowEvent e)
+					{
+						send(ServerConstants.DELETE_PLAYER + playerName);
+					}
+				});
 			}
 		});
+
+		waitPanel = new JPanel(new BorderLayout());
+		waitTime = new JLabel("", JLabel.CENTER);
+		waitPanel.add(waitTime, BorderLayout.CENTER);
+
+		gamePanel = new GamePanel(players, bullets);
+
+		cl = new CardLayout();
+		parentPanel = new JPanel(cl);
+		parentPanel.add(startPanel, START);
+		parentPanel.add(waitPanel, WAIT);
+		parentPanel.add(gamePanel, GAME);
+		cl.show(parentPanel, START);
+
+		frame = new JFrame("Game");
+		frame.setSize(ServerConstants.FRAME_SIZE, ServerConstants.FRAME_SIZE);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setContentPane(parentPanel);
+		frame.setVisible(true);
+		
+		try
+		{
+			playerName = ServerConstants.getFromMessage(frame, "Enter your name", "Name", "-") + ServerConstants.NAME_SEPERATOR +
+				InetAddress.getLocalHost() + System.currentTimeMillis();
+		}
+		catch(UnknownHostException uhe)
+		{
+			uhe.printStackTrace();
+		}
 	}
+
 	public static void main(String[] args)
 	{
-		Scanner reader = new Scanner(System.in);
-		System.out.print("Enter the IP address of the server you want to connect to (press enter if Server is being run on this computer): ");
-		new Client(reader.nextLine());
+		new Client();
 	}
 
-	public void paintComponent(Graphics g)
+	public static void send(String message)
 	{
-		super.paintComponent(g);
-		Player me = players.get(name);
-		if (me == null)
-			return;
-		int refX = (me.posX - ServerConstants.FRAME_SIZE / 2) % ServerConstants.FRAGMENT_SIZE * -1 - ServerConstants.FRAGMENT_SIZE;
-		int refY = (me.posY - ServerConstants.FRAME_SIZE / 2) % ServerConstants.FRAGMENT_SIZE * -1 - ServerConstants.FRAGMENT_SIZE;
-		gameBoard.drawBoard(g, (me.posY - ServerConstants.FRAME_SIZE / 2) / ServerConstants.FRAGMENT_SIZE - 1, 
-			(me.posY - ServerConstants.FRAME_SIZE / 2) / ServerConstants.FRAGMENT_SIZE + 16, 
-			(me.posX - ServerConstants.FRAME_SIZE / 2) / ServerConstants.FRAGMENT_SIZE - 1, 
-			(me.posX - ServerConstants.FRAME_SIZE / 2) / ServerConstants.FRAGMENT_SIZE + 16, refX, refY);
-		for (Player curr : players.values())
-			curr.draw(g, me.posX, me.posY);
-		for (Bullet bullet : bullets.values())
-			bullet.draw(g, me.posX, me.posY);
+		out.println(message);
 	}
 
-	public void keyTyped(KeyEvent evt) {}
-	public void keyReleased(KeyEvent evt) {}
-
-	public void keyPressed(KeyEvent evt)
-	{
-		int e = evt.getKeyCode();
-		if (e == KeyEvent.VK_UP)
-			out.println(ServerConstants.MOVE_PLAYER_UP + name);
-		else if (e == KeyEvent.VK_DOWN)
-			out.println(ServerConstants.MOVE_PLAYER_DOWN + name);
-		else if (e == KeyEvent.VK_LEFT)
-			out.println(ServerConstants.MOVE_PLAYER_LEFT + name);
-		else if (e == KeyEvent.VK_RIGHT)
-			out.println(ServerConstants.MOVE_PLAYER_RIGHT + name);
-	}
-
-	
-	public void mousePressed(MouseEvent e)
-	{
-		requestFocus();
-		Player player = players.get(name);
-		out.println(ServerConstants.CREATE_BULLET + (name + bulletCount) + '\0' + 
-			Bullet.toString(player.posX, player.posY, e.getX() - ServerConstants.FRAME_SIZE / 2 + player.posX,
-				e.getY() - ServerConstants.FRAME_SIZE / 2 + player.posY, player.team));
-		bulletCount++;
-	}
-
-	public void mouseClicked(MouseEvent e) {}
-	public void mouseReleased(MouseEvent e) {}
-	public void mouseExited(MouseEvent e) {}
-	public void mouseEntered(MouseEvent e) {}
-	
 	class ServerThread implements Runnable
 	{
 		public void run()
@@ -175,22 +138,18 @@ public class Client extends JPanel implements KeyListener, MouseListener
 						String input = serverIn.nextLine();
 						if (input.equals(ServerConstants.READY_TO_PLAY))
 						{
-							frame.setContentPane(outer);
-							frame.validate();
-							frame.repaint();
-							outer.requestFocus();
-							outer.addKeyListener(outer);
-							outer.addMouseListener(outer);
+							cl.show(parentPanel, GAME);
+							gamePanel.requestFocus();
 							int posY = ServerConstants.BOARD_SIZE - ServerConstants.FRAGMENT_SIZE * 2;
 							if (team.equals("blue"))
 								posY = ServerConstants.FRAGMENT_SIZE * 2;
-							out.println(ServerConstants.ADD_PLAYER + Player.toString((int)(Math.random() * (ServerConstants.BOARD_SIZE -
-								ServerConstants.FRAGMENT_SIZE * 3) + 1.5 * ServerConstants.FRAGMENT_SIZE) / 5 * 5, posY, name, team));
+							send(ServerConstants.ADD_PLAYER + Player.toString((int)(Math.random() * (ServerConstants.BOARD_SIZE -
+								ServerConstants.FRAGMENT_SIZE * 3) + 1.5 * ServerConstants.FRAGMENT_SIZE) / 5 * 5, posY, playerName, team));
 						}
 						else if (input.equals(ServerConstants.GAME_IN_SESSION))
 						{
 							waitTime.setText("Game is in session. Please wait for the next game.");
-							out.println(ServerConstants.DELETE_PLAYER + name);
+							send(ServerConstants.DELETE_PLAYER + playerName);
 							waiting = true;
 						}
 						else if (input.startsWith(ServerConstants.REVIVE_PLAYER))
@@ -226,7 +185,7 @@ public class Client extends JPanel implements KeyListener, MouseListener
 						else if (!waiting && input.startsWith(ServerConstants.ADD_PLAYER))
 							players.put(input.substring(ServerConstants.ADD_PLAYER.length(), input.indexOf('\0')), 
 								Player.getNewPlayer(input.substring(ServerConstants.ADD_PLAYER.length())));
-						outer.repaint();
+						gamePanel.repaint();
 					}
 				}
 			}
