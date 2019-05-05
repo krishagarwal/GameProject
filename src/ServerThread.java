@@ -50,6 +50,15 @@ public class ServerThread implements Runnable
 						Client.send(ServerConstants.DELETE_PLAYER + Client.playerName);
 						Client.waiting = true;
 					}
+					else if (!Client.waiting && input.startsWith(ServerConstants.FLAG_TAKEN))
+					{
+						Player player = Client.players.get(input.substring(ServerConstants.FLAG_TAKEN.length()));
+						player.hasFlag = true;
+						if (player.team.equals("red"))
+							Client.blueFlagTaken = true;
+						else
+							Client.redFlagTaken = true;
+					}
 					else if (input.startsWith(ServerConstants.WIN))
 					{
 						Client.playing = false;

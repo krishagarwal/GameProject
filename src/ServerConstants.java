@@ -35,6 +35,7 @@ public final class ServerConstants
 	public static final String DECREASE_PLAYER_HEALTH = "\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	public static final String REVIVE_PLAYER = 			"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	public static final String WIN = 					"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
+	public static final String FLAG_TAKEN = 				"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	
 	// For my reference: used as a separator, must have special
 	// character

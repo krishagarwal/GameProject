@@ -218,13 +218,13 @@ public class Server implements Runnable
 			if (in.hasNext())
 			{
 				boolean sendInfo = true;
-				boolean win = false;
+				boolean[] gameStatus = new boolean[] {false, false};
 				String input = in.nextLine();
 				if (input.startsWith(ServerConstants.MOVE_PLAYER_UP))
 				{
 					Player curr = players.get(input.substring(ServerConstants.MOVE_PLAYER_UP.length()));
 					if (!gameBoard.isAbove(curr.posX, curr.posY))
-						win = curr.moveUp();
+						gameStatus = curr.moveUp();
 					else
 						sendInfo = false;
 				}
@@ -232,7 +232,7 @@ public class Server implements Runnable
 				{
 					Player curr = players.get(input.substring(ServerConstants.MOVE_PLAYER_DOWN.length()));
 					if (!gameBoard.isBelow(curr.posX, curr.posY))
-						win = curr.moveDown();
+						gameStatus = curr.moveDown();
 					else
 						sendInfo = false;
 				}
@@ -240,7 +240,7 @@ public class Server implements Runnable
 				{
 					Player curr = players.get(input.substring(ServerConstants.MOVE_PLAYER_LEFT.length()));
 					if (!gameBoard.isLeft(curr.posX, curr.posY))
-						win = curr.moveLeft();
+						gameStatus = curr.moveLeft();
 					else
 						sendInfo = false;
 				}
@@ -248,7 +248,7 @@ public class Server implements Runnable
 				{
 					Player curr = players.get(input.substring(ServerConstants.MOVE_PLAYER_RIGHT.length()));
 					if (!gameBoard.isRight(curr.posX, curr.posY))
-						win = curr.moveRight();
+						gameStatus = curr.moveRight();
 					else
 						sendInfo = false;
 				}
@@ -263,7 +263,12 @@ public class Server implements Runnable
 				}
 				if (sendInfo)
 					sendToAll(input);
-				if (win)
+				if (gameStatus[0])
+				{
+					players.get(input.substring(input.lastIndexOf('\1') + 1)).hasFlag = true;
+					sendToAll(ServerConstants.FLAG_TAKEN + input.substring(input.lastIndexOf('\1') + 1));
+				}
+				if (gameStatus[1])
 				{
 					sendToAll(ServerConstants.WIN + input.substring(input.lastIndexOf('\1') + 1));
 					clearGame();

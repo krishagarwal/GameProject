@@ -10,9 +10,9 @@ public class Player
 {
 	String name, team;
 	int posX, posY, health, blinkerCount;
-	Image face1, left1, right1, face2, left2, right2, costume;
+	Image redFlag, blueFlag, face1, left1, right1, face2, left2, right2, costume;
 	Timer blinker;
-	boolean show;
+	boolean show, hasFlag;
 
 	// This constructor is used to instantiate a Player given
 	// the posiition, name, and team. It also presets the health
@@ -30,9 +30,12 @@ public class Player
 		face2 = new ImageIcon("../images/face2.png").getImage();
 		left2 = new ImageIcon("../images/left2.png").getImage();
 		right2 = new ImageIcon("../images/right2.png").getImage();
+		redFlag = new ImageIcon("../images/red_flag_icon.png").getImage();
+		blueFlag = new ImageIcon("../images/blue_flag_icon.png").getImage();
 		costume = face1;
 		health = ServerConstants.HEALTH;
 		show = true;
+		hasFlag = false;
 		blinkerCount = 0;
 		blinker = new Timer(250, new ActionListener()
 		{
@@ -95,57 +98,63 @@ public class Player
 
 	// This method moves the player left and also updates the image
 	// that is shown to make the player face left.
-	public boolean moveLeft()
+	public boolean[] moveLeft()
 	{
 		posX -= ServerConstants.MOVE_LENGTH;
 		if (costume == left1)
 			costume = left2;
 		else
 			costume = left1;
-		return isWin();
+		return new boolean[] {hasFlag(), isWin()};
 	}
 
 	// This method moves the player right and also updates the image
 	// that is shown to make the player face right.
-	public boolean moveRight()
+	public boolean[] moveRight()
 	{
 		posX += ServerConstants.MOVE_LENGTH;
 		if (costume == right1)
 			costume = right2;
 		else
 			costume = right1;
-			return isWin();		
+		return new boolean[] {hasFlag(), isWin()};	
 	}
 
 	// This method moves the player up and also updates the image
 	// that is shown to make the player face up.
-	public boolean moveUp()
+	public boolean[] moveUp()
 	{
 		posY -= ServerConstants.MOVE_LENGTH;
 		if (costume == face1)
 			costume = face2;
 		else
 			costume = face1;
-		return isWin();		
+		return new boolean[] {hasFlag(), isWin()};	
 	}
 
 	// This method moves the player down and also updates the image
 	// that is shown to make the player face down.
-	public boolean moveDown()
+	public boolean[] moveDown()
 	{
 		posY += ServerConstants.MOVE_LENGTH;
 		if (costume == face1)
 			costume = face2;
 		else
 			costume = face1;
-		return isWin();		
+		return new boolean[] {hasFlag(), isWin()};	
 	}
 
-	public boolean isWin()
+	public boolean hasFlag()
 	{
 		return Server.gameBoard != null && ((posY / ServerConstants.FRAGMENT_SIZE == 2 && team.equals("red"))
 			|| (posY / ServerConstants.FRAGMENT_SIZE == Server.gameBoard.total.length - 3 && team.equals("blue")))
 			&& Server.gameBoard.total[posX / ServerConstants.FRAGMENT_SIZE][posY / ServerConstants.FRAGMENT_SIZE] == 'f';
+	}
+
+	public boolean isWin()
+	{
+		return Server.gameBoard != null && hasFlag && ((team.equals("red") && posY / ServerConstants.FRAGMENT_SIZE >= Server.gameBoard.total.length - 3)
+			|| (team.equals("blue") && posY / ServerConstants.FRAGMENT_SIZE <= 2));
 	}
 
 	// This method revives the Player by setting the health back
@@ -154,6 +163,11 @@ public class Player
 	// Player ends up with 0 health, at which point revive is required.
 	public void revive(int newPosX)
 	{
+		hasFlag = false;
+		if (Client.totalPanel != null && team.equals("red"))
+			Client.blueFlagTaken = false;
+		else if (Client.totalPanel != null && team.equals("blue"))
+			Client.redFlagTaken = false;
 		posY = ServerConstants.BOARD_SIZE - ServerConstants.FRAGMENT_SIZE * 2;
 		if (team.equals("blue"))
 			posY = ServerConstants.FRAGMENT_SIZE * 2;
@@ -189,5 +203,9 @@ public class Player
 		g.drawString(displayName, posX - (int)(g.getFontMetrics().getStringBounds(displayName, g).getWidth()) / 2, 
 			posY - ServerConstants.FRAGMENT_SIZE / 2 - 5);
 		g.drawRect(posX - ServerConstants.FRAGMENT_SIZE / 2, posY - ServerConstants.FRAGMENT_SIZE / 2 - 25, ServerConstants.FRAGMENT_SIZE, 5);
+		if (hasFlag && team.equals("red"))
+			g.drawImage(blueFlag, posX - 10, posY - 20, 10, 20, null);
+		else if (hasFlag && team.equals("blue"))
+			g.drawImage(redFlag, posX - 10, posY - 20, 10, 20, null);
 	}
 }

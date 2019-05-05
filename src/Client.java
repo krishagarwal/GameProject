@@ -24,7 +24,7 @@ public class Client
 	static PrintWriter out;
 	static TotalPanel totalPanel;
 	static JFrame frame;
-	static boolean waiting, playing;
+	static boolean waiting, playing, blueFlagTaken, redFlagTaken;
 	static int bulletCount = 0;
 
 	// This constructor is used to instantiate a Client
@@ -32,8 +32,7 @@ public class Client
 	// a new JFrame, and displaying the JPanel on the JFrame
 	public Client()
 	{
-		waiting = false;
-		playing = false;
+		redFlagTaken = blueFlagTaken = waiting = playing = false;
 		players = new ConcurrentHashMap<String, Player>();
 		bullets = new ConcurrentHashMap<String, Bullet>();
 		playerName = ip = team = "";

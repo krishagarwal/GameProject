@@ -92,13 +92,13 @@ public class Board
 							i * ServerConstants.FRAGMENT_SIZE + refY,
 							ServerConstants.FRAGMENT_SIZE,
 							ServerConstants.FRAGMENT_SIZE, null);
-					else if (c == 'f' && i + rowStart == 2)
+					else if (!Client.blueFlagTaken && c == 'f' && i + rowStart == 2)
 						g.drawImage(blueFlag, j
 							* ServerConstants.FRAGMENT_SIZE + refX,
 							i * ServerConstants.FRAGMENT_SIZE + refY,
 							ServerConstants.FRAGMENT_SIZE,
 							ServerConstants.FRAGMENT_SIZE, null);
-					else if (c == 'f' && i + rowStart == total.length - 3)
+					else if (!Client.redFlagTaken && c == 'f' && i + rowStart == total.length - 3)
 						g.drawImage(redFlag, j
 							* ServerConstants.FRAGMENT_SIZE + refX,
 							i * ServerConstants.FRAGMENT_SIZE + refY,
