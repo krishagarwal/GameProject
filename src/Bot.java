@@ -1,11 +1,20 @@
 import java.awt.event.*;
 import javax.swing.*;
 
+// This class is used to store information on a Bot's location.
+// Bot's are used when an uneven number of players are online
+// during a game, meaning that an extra player is required to split
+// two teams evenly. This class uses its own logic to play the game.
 public class Bot
 {
 	private String name;
 	private static int bulletCount = 0;
+	private Timer mover;
 
+	// This constructor is used to make a new Bot. It uses the given
+	// team to position itself in the game, and also notifies all
+	// Client programs that a Bot is present (although is is handled
+	// as though the bot is a real player)
 	public Bot(String team)
 	{
 		int posX = (int)(Math.random() * (ServerConstants.BOARD_SIZE - ServerConstants.FRAGMENT_SIZE * 3) + 1.5 * ServerConstants.FRAGMENT_SIZE) / 5 * 5;
@@ -15,16 +24,29 @@ public class Bot
 		name = "Bot" + ServerConstants.NAME_SEPERATOR;
 		Server.players.put(name, new Player(posX, posY, name, team));
 		Server.sendToAll(ServerConstants.ADD_PLAYER + Player.toString(posX, posY, name, team));
-		Timer mover = new Timer(85, new ActionListener()
+		mover = new Timer(45, new ActionListener()
 		{
+			// This method is run once every 25 milliseconds (using a
+			// Timer). This method handles the logic that the Bot
+			// follows to play the game. It first locates the nearest
+			// opponent. About every half a second, the Bot shoots a
+			// bullet towards the nearest opponent. The Bot is
+			// constantly trying to get within 100 pixels of the
+			// nearest opponent, and when it reaches point, it stops,
+			// but continues shooting.
 			public void actionPerformed(ActionEvent e)
 			{
 				Player player = Server.players.get(name);
+				if (player == null)
+				{
+					mover.stop();
+					return;
+				}
 				Player nearest = Server.getNearestOpponent(player.posX, player.posY, player.team);
 				if (nearest == null)
 					return;
 				
-				if (bulletCount % 5 == 0)
+				if (bulletCount % 10 == 0)
 				{
 					String input = (name + bulletCount) + '\0' + 
 						Bullet.toString(player.posX, player.posY, nearest.posX, nearest.posY, team);

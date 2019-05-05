@@ -10,63 +10,98 @@ import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Scanner;
 
+// This class is the program run by all Clients who want to play 
+// the game. This class handles the JFrame, sending/receiving
+// information from the Server, and drawing game elements on
+// the screen.
 public class Client
 {
 	static Socket socket;
 	static String playerName, ip, team;
-	final static String NAME = "name";
-	final static String START = "start";
-	final static String SERVER_IN = "server";
-	final static String WAIT = "wait";
-	final static String GAME = "game";
 	static ConcurrentHashMap<String, Player> players;
 	static ConcurrentHashMap<String, Bullet> bullets;
 	static Scanner serverIn;
 	static PrintWriter out;
-	static JPanel namePanel, startPanel, serverInPanel, waitPanel, parentPanel, gamePanel;
-	JLabel waitTime;
+	static TotalPanel totalPanel;
 	static JFrame frame;
-	static boolean waiting;
+	static boolean waiting, playing;
 	static int bulletCount = 0;
-	static CardLayout cl;
 
+	// This constructor is used to instantiate a Client
+	// player by defining some static field variables, making
+	// a new JFrame, and displaying the JPanel on the JFrame
 	public Client()
 	{
 		waiting = false;
+		playing = false;
 		players = new ConcurrentHashMap<String, Player>();
 		bullets = new ConcurrentHashMap<String, Bullet>();
-		playerName = ip = "";
-
-		namePanel = new NamePanel();
-		startPanel = new StartPanel();
-		serverInPanel = new ServerInputPanel();
-		waitPanel = new WaitPanel();
-		gamePanel = new GamePanel(players, bullets);
-
-		cl = new CardLayout();
-		parentPanel = new JPanel(cl);
-		parentPanel.add(namePanel, NAME);
-		parentPanel.add(startPanel, START);
-		parentPanel.add(serverInPanel, SERVER_IN);
-		parentPanel.add(waitPanel, WAIT);
-		parentPanel.add(gamePanel, GAME);
-		cl.show(parentPanel, NAME);
-		namePanel.requestFocus();
-
+		playerName = ip = team = "";
+		totalPanel = new TotalPanel();
+		
 		frame = new JFrame("Game");
-		frame.setSize(ServerConstants.FRAME_SIZE, ServerConstants.FRAME_SIZE);
+		frame.setSize(ServerConstants.FRAME_SIZE,
+			ServerConstants.FRAME_SIZE);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setContentPane(parentPanel);
+		frame.setContentPane(totalPanel);
 		frame.setVisible(true);
 	}
 
+	// This method is the first method run when the Client program
+	// is run. The method instantiates a Client object to run the
+	// Client constructor.
 	public static void main(String[] args)
 	{
 		new Client();
 	}
 
+	// This method is used to send the given String message to the
+	// Server program using the PrintWriter object out.
 	public static void send(String message)
 	{
 		out.println(message);
+	}
+
+	public static void clearGame()
+	{
+		try
+		{
+			socket.close();
+		}
+		catch(IOException ioe)
+		{
+			ioe.printStackTrace();
+		}
+		ip = team = "";
+		bulletCount = 0;
+		players.clear();
+		bullets.clear();
+		TotalPanel.movePosX = Math.abs(300 - TotalPanel.posX) / (300 - TotalPanel.posX) * 5;
+		TotalPanel.movePosY = Math.abs(300 - TotalPanel.posY) / (300 - TotalPanel.posY) * 5;
+		totalPanel.posMover.start();
+	}
+
+	public static void connect()
+	{
+		Client.socket = null;
+		try
+		{
+			if (ip.equals(""))
+				ip += ServerConstants.getLocalHost(frame, "You do not seem to be connected to the internet. Reconnect and try again.");
+			socket = new Socket(ip, ServerConstants.PORT_NUMBER);
+			Thread.sleep(1000);
+			Thread server = new Thread(new ServerThread());
+			server.start();
+		}
+		catch (IOException ioe)
+		{
+			System.err.println("Fatal connection error");
+			ioe.printStackTrace();
+		}
+		catch (InterruptedException ie)
+		{
+			System.err.println("Fatal connection error");
+			ie.printStackTrace();
+		}
 	}
 }

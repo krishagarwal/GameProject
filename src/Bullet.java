@@ -3,11 +3,16 @@ import java.awt.event.*;
 import javax.swing.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+// This class is used to store information on each bullet fired
+// during game play. It stores the position and the slope of the
+// line that the bullet follows.
 public class Bullet
 {
 	int posX, posY, addX, addY;
 	String team;
 
+	// This constructor instantiates a Bullet starting from (x, y)
+	// and adding xAdd and yAdd to update the position.
 	private Bullet(int x, int y, int xAdd, int yAdd, String team)
 	{
 		posX = x;
@@ -17,6 +22,10 @@ public class Bullet
 		this.team = team;
 	}
 
+	// This method returns a Bullet based on the starting coordinates
+	// and the coordinates of the mouse press when a bullet is shot.
+	// It calls the Bullet constructor when the xAdd and yAdd have
+	// been calculated.
 	private static Bullet getNewBullet(int fromX, int fromY, int toX, int toY, String team)
 	{
 		double radians = Math.atan((double)(toY - fromY) / (toX - fromX));
@@ -31,6 +40,10 @@ public class Bullet
 			(int)(Math.sin(radians) * 6) * Math.abs(toX - fromX) / (toX - fromX), team);
 	}
 
+	// This method takes the String input sent to all Clients when
+	// a bullet is fired and retrieves individual values from the
+	// String to call the other getNewBullet() so a Bullet can be
+	// instantiated.
 	public static Bullet getNewBullet(String input)
 	{
 		int fromX = Integer.parseInt(input.substring(0, input.indexOf('\0')));
@@ -45,17 +58,27 @@ public class Bullet
 		return getNewBullet(fromX, fromY, toX, toY, team);
 	}
 
-	public static String toString(int fromX, int fromY, int toX, int toY, String team)
+	// This method returns the String that should be sent to each
+	// Client to inform the Clients to make a new Bullet (on each
+	// Client program, the getNewBullet(String input) method parses
+	// this input to make a Bullet with the same information)
+	public static String toString(int fromX, int fromY, int toX,
+		int toY, String team)
 	{
-		return "" + fromX + '\0' + fromY + '\0' + toX + '\0' + toY + '\0' + team;
+		return "" + fromX + '\0' + fromY + '\0' + toX + '\0' + toY
+			+ '\0' + team;
 	}
 
+	// This method increments the x and y position of the Bullet
+	// so the Bullet appears to be moving.
 	public void update()
 	{
 		posX += addX;
 		posY += addY;
 	}
 
+	// This method is called inside TotalPanel's paintComponent()
+	// so that each Bullet can be drawn on the screen.
 	public void draw(Graphics g, int refX, int refY)
 	{
 		int posX = this.posX + ServerConstants.FRAME_SIZE / 2 - refX;
@@ -63,6 +86,7 @@ public class Bullet
 		g.setColor(Color.RED);
 		if (team.equals("blue"))
 			g.setColor(Color.BLUE);
-		g.fillOval(posX - ServerConstants.BULLET_SIZE / 2, posY - ServerConstants.BULLET_SIZE / 2, ServerConstants.BULLET_SIZE, ServerConstants.BULLET_SIZE);
+		g.fillOval(posX - ServerConstants.BULLET_SIZE / 2, posY
+			- ServerConstants.BULLET_SIZE / 2, ServerConstants.BULLET_SIZE, ServerConstants.BULLET_SIZE);
 	}
 }

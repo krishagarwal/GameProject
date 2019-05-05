@@ -4,16 +4,23 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.io.IOException;
 import java.util.Scanner;
 import java.io.PrintWriter;
 
+// This class is used as a Server program to connect to all Client
+// programs so that the Clients can communicate between each other.
+// This class also handles some parts of the game logic, such as
+// terminating Bullets when they hit Players. In addition, an istance
+// of this class is made whenever a Client needs to connect, as this
+// class stores information about how to communicate with the Client
+// program.
 public class Server implements Runnable
 {
 	static ServerSocket serverSocket;
-	static ArrayList<Server> clients;
+	static CopyOnWriteArrayList<Server> clients;
 	static ConcurrentHashMap<String, Player> players;
 	static ConcurrentHashMap<String, Bullet> bullets;
 	static Timer waitTimer, bulletTimer;
@@ -25,10 +32,22 @@ public class Server implements Runnable
 	private PrintWriter out;
 	static Board gameBoard;
 
+	// This is the first method run when the Server program is run.
+	// It first prints out the IP address of the computer the Server
+	// program is being run on so that this IP address can be
+	// inputted into the Client program. It instantiates static field
+	// variables, establishes the method of connectivity used to
+	// connect Clients to the Server, and runs the acceptClients()
+	// method to establish a connection to Client programs that are
+	// being run/
 	public static void main(String[] args)
 	{
 		Thread message = new Thread(new Runnable()
 		{
+			// This is a method used to display the IP address that
+			// Clients should connect to. It runs separate from the
+			// rest of the Server program so that the message can be
+			// displayed even while the Server performs certain tasks.
 			public void run()
 			{
 				ServerConstants.showMessage(null, "Play with your friends!", "Connect clients using this IP address: " +
@@ -44,6 +63,10 @@ public class Server implements Runnable
 		gameBoard = new Board();
 		waitTimer = new Timer(1000, new ActionListener()
 		{
+			// This method is used to count down until the 
+			// start of the game. This countdown is required to
+			// allow all the Clients some buffer time to join the
+			// game before before the game starts.
 			public void actionPerformed(ActionEvent e)
 			{
 				sendToAll(ServerConstants.WAIT_BEFORE_PLAY + count);
@@ -63,6 +86,8 @@ public class Server implements Runnable
 
 		bulletTimer = new Timer(10, new ActionListener()
 		{
+			// This method is used in a Timer to update all the
+			// bullets that are currently in play.
 			public void actionPerformed(ActionEvent e)
 			{
 				for (String name : bullets.keySet())
@@ -100,14 +125,21 @@ public class Server implements Runnable
 		}
 		catch (IOException e)
 		{
-			System.err.println("Could not listen on port: " + ServerConstants.PORT_NUMBER);
+			System.err.println("Could not listen on port: "
+				+ ServerConstants.PORT_NUMBER);
 			System.exit(1);
 		}
 	}
 
+	// This method runs during the rest of the program to continually
+	// accept Client programs that are being run. It establishes a
+	// new connection whenever a new Client program is run and makes
+	// an instance of the Server class for communication purposes.
+	// This is then added to a list of Servers so that communication
+	// can occur between all Client programs.
 	public static void acceptClients()
 	{
-		clients = new ArrayList<Server>();
+		clients = new CopyOnWriteArrayList<Server>();
 		while (true)
 		{
 			try
@@ -132,6 +164,13 @@ public class Server implements Runnable
 		}
 	}
 
+	// This constructor is used to instantiate a new Server object,
+	// which stores details on how to communcate with the Server
+	// program and the current Client. It uses an object of the Socket
+	// class (which is included with Java), which stores information on
+	// how to communicate with the current Client in the form of
+	// storing a PrintWriter for sending messages to the Client and
+	// storing a Scanner for receiving messages from the Client.
 	public Server(Socket socket)
 	{
 		this.socket = socket;
@@ -147,6 +186,20 @@ public class Server implements Runnable
 		}
 	}
 
+	// This method is a method run for each Client program separately
+	// from the Server program (meaning on different threads) so that
+	// messages can be received/sent to and from different Clients in
+	// real time. The method first determines the team of the current
+	// Player and sends this information to the Client program. Then,
+	// during the game this method waits for any messages received
+	// from the Client program. Each message is started with a
+	// sequence of characters indicating intent of the message, and
+	// so when a message is received, the specific sequence of
+	// characters is identifies and the program responds appropriately
+	// (hence the long if/else structure). After the response, the
+	// message is relayed to all other Client programs so that the
+	// other Client programs can also respond to the message
+	// appropriately on their side.
 	public void run()
 	{
 		int rand = (int)(Math.random() * 2);
@@ -165,12 +218,13 @@ public class Server implements Runnable
 			if (in.hasNext())
 			{
 				boolean sendInfo = true;
+				boolean win = false;
 				String input = in.nextLine();
 				if (input.startsWith(ServerConstants.MOVE_PLAYER_UP))
 				{
 					Player curr = players.get(input.substring(ServerConstants.MOVE_PLAYER_UP.length()));
 					if (!gameBoard.isAbove(curr.posX, curr.posY))
-						curr.moveUp();
+						win = curr.moveUp();
 					else
 						sendInfo = false;
 				}
@@ -178,7 +232,7 @@ public class Server implements Runnable
 				{
 					Player curr = players.get(input.substring(ServerConstants.MOVE_PLAYER_DOWN.length()));
 					if (!gameBoard.isBelow(curr.posX, curr.posY))
-						curr.moveDown();
+						win = curr.moveDown();
 					else
 						sendInfo = false;
 				}
@@ -186,7 +240,7 @@ public class Server implements Runnable
 				{
 					Player curr = players.get(input.substring(ServerConstants.MOVE_PLAYER_LEFT.length()));
 					if (!gameBoard.isLeft(curr.posX, curr.posY))
-						curr.moveLeft();
+						win = curr.moveLeft();
 					else
 						sendInfo = false;
 				}
@@ -194,7 +248,7 @@ public class Server implements Runnable
 				{
 					Player curr = players.get(input.substring(ServerConstants.MOVE_PLAYER_RIGHT.length()));
 					if (!gameBoard.isRight(curr.posX, curr.posY))
-						curr.moveRight();
+						win = curr.moveRight();
 					else
 						sendInfo = false;
 				}
@@ -203,25 +257,49 @@ public class Server implements Runnable
 				else if (input.startsWith(ServerConstants.DELETE_PLAYER))
 					players.remove(input.substring(ServerConstants.DELETE_PLAYER.length()));
 				else if (input.startsWith(ServerConstants.ADD_PLAYER))
+				{
 					players.put(input.substring(ServerConstants.ADD_PLAYER.length(), input.indexOf('\0')), 
 						Player.getNewPlayer(input.substring(ServerConstants.ADD_PLAYER.length())));
+				}
 				if (sendInfo)
 					sendToAll(input);
+				if (win)
+				{
+					sendToAll(ServerConstants.WIN + input.substring(input.lastIndexOf('\1') + 1));
+					clearGame();
+				}
 			}
 		}
+		socket = null;
+		in = null;
+		out = null;
 	}
 
+	// This method returns the PrintWriter stored by the current
+	// Server object. This PrintWriter is used for sending messages
+	// to the current Client program, and this method is required
+	// because "PrintWriter out" is a private variable. This method
+	// is used in the sendToAll() method.
 	public PrintWriter getWriter()
 	{
 		return out;
 	}
 
+	// This method is used to send the String input message to all
+	// the Clients by iterating over the list of Client connections
+	// and using their PrintWriter objects to send the message.
 	public static void sendToAll(String input)
 	{
 		for (Server client : clients)
 			client.getWriter().println(input);
 	}
 
+	// This method returns the nearest opponent given the position
+	// (x, y) and the team to find the opponent for. The method
+	// iterates over the list of Players and uses the
+	// Player.getDistanceTo() method to decide which opponent is
+	// closest to the given position. This method is used in the Bot
+	// class for deciding what the Bot should do in the game.
 	public static Player getNearestOpponent(int x, int y, String team)
 	{
 		Player nearest = null;
@@ -233,6 +311,11 @@ public class Server implements Runnable
 		return nearest;
 	}
 
+	// This method is used to creating a new Bullet given the input
+	// message received by a Client program. It uses the
+	// Bullet.getNewBullet() method to parse the input message into
+	// a new Bullet, then adds this bullet to the list of Bullets
+	// stored by the Server program.
 	public static void addBulletLog(String input)
 	{
 		String name = input.substring(ServerConstants.CREATE_BULLET.length(), input.indexOf('\0'));
@@ -240,9 +323,35 @@ public class Server implements Runnable
 		bullets.put(name, toAdd);
 	}
 
+	// This method terminates a Bullet whenever it hits a Player.
+	// It first removes the Bullet from the list of Bullets stored
+	// by the Server program and then sends the message to all
+	// Client programs to terminate the bullet.
 	public static void stopBullet(String name)
 	{
 		bullets.remove(name);
 		sendToAll(ServerConstants.TERMINATE_BULLET + name);
+	}
+
+	public static void clearGame()
+	{
+		for (Server curr : clients)
+		{
+			try
+			{
+				curr.socket.close();
+			}
+			catch(IOException ioe)
+			{
+				ioe.printStackTrace();
+			}
+		}
+		bulletTimer.stop();
+		bullets.clear();
+		players.clear();
+		redCount = 0;
+		blueCount = 0;
+		clients.clear();
+		gamePlaying = false;
 	}
 }
