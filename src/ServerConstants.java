@@ -1,3 +1,9 @@
+/*
+Krish Agarwal
+5.10.19
+ServerConstants.java
+*/
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import javax.swing.*;
@@ -17,10 +23,10 @@ public final class ServerConstants
 {
 	// For my reference: checked against using equals(), order
 	// does not matter between, but should appear at top
-	public static final String READY_TO_PLAY = 			"\1";
-	public static final String GAME_IN_SESSION = 		"\1\1";
+	public static final String GAME_IN_SESSION = 		"\1";
 	
 	// checked against using startsWith(), must appear last to first
+	public static final String READY_TO_PLAY = 			"\1\1";
 	public static final String ADD_PLAYER = 			"\1\1\1";
 	public static final String DELETE_PLAYER = 			"\1\1\1\1";
 	public static final String WAIT_BEFORE_PLAY = 		"\1\1\1\1\1";
@@ -43,7 +49,7 @@ public final class ServerConstants
 	
 	// For my reference: constant numerical fields
 	public static final int PORT_NUMBER = 4444;
-	public static final int WAIT_TIME = 60;
+	public static final int WAIT_TIME = 3;
 	public static final int BULLET_SIZE = 10;
 	public static final int FRAME_SIZE = 600;
 	public static final int BOARD_SIZE = 1350;
@@ -54,14 +60,17 @@ public final class ServerConstants
 	public static final int MOVE_LENGTH = 5;
 	public static final int WALL_THICKNESS = 5;
 
+	// For my regerence: game modes
+	public static final int CAPTURE_THE_FLAG = 1;
+	public static final int RED_VS_BLUE = 2;
+	public static final int COLLABORATIVE = 3;
+
 	// This method is used to display a message String on the
 	// screen using a JOptionPane. This method is used in the Server
 	// class to display the IP address to connect to.
-	public static void showMessage(JFrame parent, String title,
-		String content)
+	public static void showMessage(JFrame parent, String title, String content)
 	{
-		JOptionPane.showMessageDialog(parent, content, title,
-			JOptionPane.INFORMATION_MESSAGE);
+		JOptionPane.showMessageDialog(parent, content, title, JOptionPane.INFORMATION_MESSAGE);
 	}
 
 	// This method returns the IP address of the current computer
@@ -86,10 +95,8 @@ public final class ServerConstants
 	// This method is used to display a String error message. It is
 	// used in the getLocalHost() method if that method encounters
 	// an error.
-	public static void showErrorMessage(JFrame parent, String title,
-		String content)
+	public static void showErrorMessage(JFrame parent, String title, String content)
 	{
-		JOptionPane.showMessageDialog(parent, content, title,
-			JOptionPane.ERROR_MESSAGE);
+		JOptionPane.showMessageDialog(parent, content, title, JOptionPane.ERROR_MESSAGE);
 	}
 }

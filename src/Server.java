@@ -1,3 +1,9 @@
+/*
+Krish Agarwal
+5.10.19
+Server.java
+*/
+
 import javax.swing.*;
 import java.awt.event.*;
 import java.net.InetAddress;
@@ -24,7 +30,7 @@ public class Server implements Runnable
 	static ConcurrentHashMap<String, Player> players;
 	static ConcurrentHashMap<String, Bullet> bullets;
 	static Timer waitTimer, bulletTimer;
-	static int count;
+	static int count, gameMode;
 	static boolean gamePlaying;
 	static int redCount = 0, blueCount = 0;
 	private Socket socket;
@@ -39,9 +45,10 @@ public class Server implements Runnable
 	// variables, establishes the method of connectivity used to
 	// connect Clients to the Server, and runs the acceptClients()
 	// method to establish a connection to Client programs that are
-	// being run/
+	// being run.
 	public static void main(String[] args)
 	{
+		gameMode = ServerConstants.CAPTURE_THE_FLAG;
 		Thread message = new Thread(new Runnable()
 		{
 			// This is a method used to display the IP address that
@@ -74,7 +81,7 @@ public class Server implements Runnable
 				if (count >= 0)
 					return;
 				waitTimer.stop();
-				sendToAll(ServerConstants.READY_TO_PLAY);
+				sendToAll(ServerConstants.READY_TO_PLAY + gameMode);
 				bulletTimer.start();
 				gamePlaying = true;
 				if (redCount < blueCount)
@@ -107,7 +114,7 @@ public class Server implements Runnable
 						{
 							int newPosX = (int)(Math.random() * (ServerConstants.BOARD_SIZE - ServerConstants.FRAGMENT_SIZE * 3)
 								+ 1.5 * ServerConstants.FRAGMENT_SIZE) / 5 * 5;
-							sendToAll(ServerConstants.REVIVE_PLAYER + nearest.name + '\0' + newPosX);
+							sendToAll(ServerConstants.REVIVE_PLAYER + nearest.name + '\0' + newPosX + '\0' + (name.substring(0, name.lastIndexOf(ServerConstants.NAME_SEPERATOR))));
 							nearest.revive(newPosX);
 						}
 					}
@@ -255,12 +262,14 @@ public class Server implements Runnable
 				else if (input.startsWith(ServerConstants.CREATE_BULLET))
 					addBulletLog(input);
 				else if (input.startsWith(ServerConstants.DELETE_PLAYER))
-					players.remove(input.substring(ServerConstants.DELETE_PLAYER.length()));
-				else if (input.startsWith(ServerConstants.ADD_PLAYER))
 				{
+					players.remove(input.substring(ServerConstants.DELETE_PLAYER.length()));
+					if (allAreBots())
+						clearGame();
+				}
+				else if (input.startsWith(ServerConstants.ADD_PLAYER))
 					players.put(input.substring(ServerConstants.ADD_PLAYER.length(), input.indexOf('\0')), 
 						Player.getNewPlayer(input.substring(ServerConstants.ADD_PLAYER.length())));
-				}
 				if (sendInfo)
 					sendToAll(input);
 				if (gameStatus[0])
@@ -278,6 +287,21 @@ public class Server implements Runnable
 		socket = null;
 		in = null;
 		out = null;
+	}
+
+	// This method checks if all the players that are currently
+	// online are Bots. This is used when a player closes the
+	// Client program before finishing the game, in which case
+	// the Server program should be freed to allow players to join
+	// a new game as they appear online.
+	private static boolean allAreBots()
+	{
+		for (String curr : players.keySet())
+		{
+			if (curr.substring(curr.lastIndexOf(ServerConstants.NAME_SEPERATOR) + 1).length() > 0)
+				return false;
+		}
+		return true;
 	}
 
 	// This method returns the PrintWriter stored by the current
@@ -310,7 +334,7 @@ public class Server implements Runnable
 		Player nearest = null;
 		for (Player curr : players.values())
 		{
-			if (!curr.team.equals(team) && (nearest == null || curr.getDistanceTo(x, y) < nearest.getDistanceTo(x, y)))
+			if (!curr.dead && !curr.team.equals(team) && (nearest == null || curr.getDistanceTo(x, y) < nearest.getDistanceTo(x, y)))
 				nearest = curr;
 		}
 		return nearest;
@@ -338,6 +362,10 @@ public class Server implements Runnable
 		sendToAll(ServerConstants.TERMINATE_BULLET + name);
 	}
 
+	// This method is used to clear the current game. This method is
+	// used after a win situation has occurred, in which case the Server
+	// should clear the game so that a new one can be started whenever
+	// Client programs want to connect.
 	public static void clearGame()
 	{
 		for (Server curr : clients)
@@ -358,5 +386,6 @@ public class Server implements Runnable
 		blueCount = 0;
 		clients.clear();
 		gamePlaying = false;
+		Bot.botCount = 0;
 	}
 }

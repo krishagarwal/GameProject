@@ -1,3 +1,9 @@
+/*
+Krish Agarwal
+5.10.19
+ServerThread.java
+*/
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Scanner;
@@ -13,7 +19,7 @@ public class ServerThread implements Runnable
 	// game play. It first establishes a method of communication
 	// between this Client program and the Server program using
 	// PrintWriter and Scanner (used for transferring information
-	// in the form of Strings).vThen, for as long as the game is being
+	// in the form of Strings). Then, for as long as the game is being
 	// played, this method reads information inputted by the Server
 	// program. Each message starts with an identifier indicating the
 	// purpose of the message, so this method looks for this
@@ -33,18 +39,7 @@ public class ServerThread implements Runnable
 				if (Client.serverIn.hasNext())
 				{
 					String input = Client.serverIn.nextLine();
-					if (input.equals(ServerConstants.READY_TO_PLAY))
-					{
-						Client.playing = true;
-						Client.totalPanel.moveLeft();
-						Client.totalPanel.repaint();
-						int posY = ServerConstants.BOARD_SIZE - ServerConstants.FRAGMENT_SIZE * 2;
-						if (Client.team.equals("blue"))
-							posY = ServerConstants.FRAGMENT_SIZE * 2;
-						Client.send(ServerConstants.ADD_PLAYER + Player.toString((int)(Math.random() * (ServerConstants.BOARD_SIZE -
-							ServerConstants.FRAGMENT_SIZE * 3) + 1.5 * ServerConstants.FRAGMENT_SIZE) / 5 * 5, posY, Client.playerName, Client.team));
-					}
-					else if (input.equals(ServerConstants.GAME_IN_SESSION))
+					if (input.equals(ServerConstants.GAME_IN_SESSION))
 					{
 						Client.totalPanel.setWaitText("Game is in session. Please wait for the next game.");
 						Client.send(ServerConstants.DELETE_PLAYER + Client.playerName);
@@ -76,8 +71,13 @@ public class ServerThread implements Runnable
 						}
 					}
 					else if (!Client.waiting && input.startsWith(ServerConstants.REVIVE_PLAYER))
-						Client.players.get(input.substring(ServerConstants.REVIVE_PLAYER.length(), 
-							input.indexOf('\0'))).revive(Integer.parseInt(input.substring(input.indexOf('\0') + 1)));
+					{
+						String killed = input.substring(ServerConstants.REVIVE_PLAYER.length(), input.indexOf('\0'));
+						String killer = input.substring(input.lastIndexOf('\0') + 1);
+						Client.players.get(killed).revive(Integer.parseInt(input.substring(input.indexOf('\0') + 1, input.lastIndexOf('\0'))));
+						System.out.println("\"" + killer.substring(0, killer.indexOf(ServerConstants.NAME_SEPERATOR))
+							+ "\" killed \"" + killed.substring(0, killed.indexOf(ServerConstants.NAME_SEPERATOR)) + "\"");
+					}
 					else if (!Client.waiting && input.startsWith(ServerConstants.DECREASE_PLAYER_HEALTH))
 						Client.players.get(input.substring(ServerConstants.DECREASE_PLAYER_HEALTH.length())).decreaseHealth();
 					else if (!Client.waiting && input.startsWith(ServerConstants.UPDATE_BULLET))
@@ -102,12 +102,23 @@ public class ServerThread implements Runnable
 					else if (!Client.waiting && input.startsWith(ServerConstants.SET_TEAM))
 						Client.team = input.substring(ServerConstants.SET_TEAM.length());
 					else if (!Client.waiting && input.startsWith(ServerConstants.WAIT_BEFORE_PLAY))
-						Client.totalPanel.setWaitText("Starting in " + Integer.parseInt(input.substring(ServerConstants.WAIT_BEFORE_PLAY.length())));
+						Client.totalPanel.setWaitText("starting in " + Integer.parseInt(input.substring(ServerConstants.WAIT_BEFORE_PLAY.length())));
 					else if (!Client.waiting && input.startsWith(ServerConstants.DELETE_PLAYER))
 						Client.players.remove(input.substring(ServerConstants.DELETE_PLAYER.length()));
 					else if (!Client.waiting && input.startsWith(ServerConstants.ADD_PLAYER))
 						Client.players.put(input.substring(ServerConstants.ADD_PLAYER.length(), input.indexOf('\0')), 
 							Player.getNewPlayer(input.substring(ServerConstants.ADD_PLAYER.length())));
+					else if (input.startsWith(ServerConstants.READY_TO_PLAY))
+					{
+						Client.gameMode = Integer.parseInt(input.substring(ServerConstants.READY_TO_PLAY.length()));
+						Client.playing = true;
+						Client.totalPanel.moveLeft();
+						int posY = ServerConstants.BOARD_SIZE - ServerConstants.FRAGMENT_SIZE * 2;
+						if (Client.team.equals("blue"))
+							posY = ServerConstants.FRAGMENT_SIZE * 2;
+						Client.send(ServerConstants.ADD_PLAYER + Player.toString((int)(Math.random() * (ServerConstants.BOARD_SIZE -
+							ServerConstants.FRAGMENT_SIZE * 3) + 1.5 * ServerConstants.FRAGMENT_SIZE) / 5 * 5, posY, Client.playerName, Client.team));
+					}
 					Client.totalPanel.repaint();
 				}
 			}

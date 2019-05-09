@@ -1,3 +1,9 @@
+/*
+Krish Agarwal
+5.10.19
+Bullet.java
+*/
+
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -36,7 +42,7 @@ public class Bullet
 		}
 		if (fromX == toX)
 			return new Bullet(fromX, fromY, 0, Math.abs(toY - fromY) / (toY - fromY) * 6, team);
-		return new Bullet(fromX, fromY, (int)(Math.cos(radians) * 6) * Math.abs(toX - fromX) / (toX - fromX), 
+		return new Bullet(fromX, fromY, (int)(Math.cos(radians) * 6) * Math.abs(toX - fromX) / (toX - fromX),
 			(int)(Math.sin(radians) * 6) * Math.abs(toX - fromX) / (toX - fromX), team);
 	}
 
@@ -62,11 +68,9 @@ public class Bullet
 	// Client to inform the Clients to make a new Bullet (on each
 	// Client program, the getNewBullet(String input) method parses
 	// this input to make a Bullet with the same information)
-	public static String toString(int fromX, int fromY, int toX,
-		int toY, String team)
+	public static String toString(int fromX, int fromY, int toX, int toY, String team)
 	{
-		return "" + fromX + '\0' + fromY + '\0' + toX + '\0' + toY
-			+ '\0' + team;
+		return "" + fromX + '\0' + fromY + '\0' + toX + '\0' + toY + '\0' + team;
 	}
 
 	// This method increments the x and y position of the Bullet
@@ -86,7 +90,6 @@ public class Bullet
 		g.setColor(Color.RED);
 		if (team.equals("blue"))
 			g.setColor(Color.BLUE);
-		g.fillOval(posX - ServerConstants.BULLET_SIZE / 2, posY
-			- ServerConstants.BULLET_SIZE / 2, ServerConstants.BULLET_SIZE, ServerConstants.BULLET_SIZE);
+		g.fillOval(posX - ServerConstants.BULLET_SIZE / 2, posY - ServerConstants.BULLET_SIZE / 2, ServerConstants.BULLET_SIZE, ServerConstants.BULLET_SIZE);
 	}
 }

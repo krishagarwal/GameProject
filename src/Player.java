@@ -1,3 +1,9 @@
+/*
+Krish Agarwal
+5.10.19
+Player.java
+*/
+
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -9,14 +15,14 @@ import javax.swing.*;
 public class Player
 {
 	String name, team;
-	int posX, posY, health, blinkerCount;
+	int posX, posY, health, blinkerCount, livesLeft;
 	Image redFlag, blueFlag, face1, left1, right1, face2, left2, right2, costume;
 	Timer blinker;
-	boolean show, hasFlag;
+	boolean show, hasFlag, dead;
 
 	// This constructor is used to instantiate a Player given
 	// the posiition, name, and team. It also presets the health
-	// value as well as al of the images used to display the
+	// values as well as al of the images used to display the
 	// character. 
 	public Player(int posX, int posY, String name, String team)
 	{
@@ -24,6 +30,8 @@ public class Player
 		this.posY = posY;
 		this.team = team;
 		this.name = name;
+		livesLeft = 3;
+		dead = false;
 		face1 = new ImageIcon("../images/face1.png").getImage();
 		left1 = new ImageIcon("../images/left1.png").getImage();
 		right1 = new ImageIcon("../images/right1.png").getImage();
@@ -39,6 +47,9 @@ public class Player
 		blinkerCount = 0;
 		blinker = new Timer(250, new ActionListener()
 		{
+			// This method is used in a Timer to make the
+			// player appear as if it is blinking when they revive.
+			// This is acheived by toggling the boolean variable "show".
 			public void actionPerformed(ActionEvent e)
 			{
 				show = !show;
@@ -97,7 +108,9 @@ public class Player
 	}
 
 	// This method moves the player left and also updates the image
-	// that is shown to make the player face left.
+	// that is shown to make the player face left. It returns two
+	// boolean variables in an array that descibe the game status.
+	// These variables are used in the Server program.
 	public boolean[] moveLeft()
 	{
 		posX -= ServerConstants.MOVE_LENGTH;
@@ -109,7 +122,9 @@ public class Player
 	}
 
 	// This method moves the player right and also updates the image
-	// that is shown to make the player face right.
+	// that is shown to make the player face right. It returns two
+	// boolean variables in an array that descibe the game status.
+	// These variables are used in the Server program.
 	public boolean[] moveRight()
 	{
 		posX += ServerConstants.MOVE_LENGTH;
@@ -121,7 +136,9 @@ public class Player
 	}
 
 	// This method moves the player up and also updates the image
-	// that is shown to make the player face up.
+	// that is shown to make the player face up. It returns two
+	// boolean variables in an array that descibe the game status.
+	// These variables are used in the Server program.
 	public boolean[] moveUp()
 	{
 		posY -= ServerConstants.MOVE_LENGTH;
@@ -133,7 +150,9 @@ public class Player
 	}
 
 	// This method moves the player down and also updates the image
-	// that is shown to make the player face down.
+	// that is shown to make the player face down. It returns two
+	// boolean variables in an array that descibe the game status.
+	// These variables are used in the Server program.
 	public boolean[] moveDown()
 	{
 		posY += ServerConstants.MOVE_LENGTH;
@@ -144,6 +163,8 @@ public class Player
 		return new boolean[] {hasFlag(), isWin()};	
 	}
 
+	// Whenever the player moves, this method is called to check if
+	// the player has the opposing team's flag.
 	public boolean hasFlag()
 	{
 		return Server.gameBoard != null && ((posY / ServerConstants.FRAGMENT_SIZE == 2 && team.equals("red"))
@@ -151,15 +172,20 @@ public class Player
 			&& Server.gameBoard.total[posX / ServerConstants.FRAGMENT_SIZE][posY / ServerConstants.FRAGMENT_SIZE] == 'f';
 	}
 
+	// Whenever the player moves, this method is called to check if
+	// the player crosses to its team's zone while having possesion
+	// of the opposition's flag.
 	public boolean isWin()
 	{
-		return Server.gameBoard != null && hasFlag && ((team.equals("red") && posY / ServerConstants.FRAGMENT_SIZE >= Server.gameBoard.total.length - 3)
-			|| (team.equals("blue") && posY / ServerConstants.FRAGMENT_SIZE <= 2));
+		return Server.gameBoard != null && hasFlag && ((team.equals("red") && 
+			(posY - ServerConstants.FRAGMENT_SIZE / 2) / ServerConstants.FRAGMENT_SIZE >= Server.gameBoard.total.length - 4)
+			|| (team.equals("blue") && (posY + ServerConstants.FRAGMENT_SIZE / 2) / ServerConstants.FRAGMENT_SIZE <= 3));
 	}
 
 	// This method revives the Player by setting the health back
 	// to 100 and placing the Player in a new position based on the
-	// team. This method is used when the Player is shot and the
+	// team. It also decreses the number of lives left.
+	// This method is used when the Player is shot and the
 	// Player ends up with 0 health, at which point revive is required.
 	public void revive(int newPosX)
 	{
@@ -173,6 +199,10 @@ public class Player
 			posY = ServerConstants.FRAGMENT_SIZE * 2;
 		posX = newPosX;
 		health = ServerConstants.HEALTH;
+		livesLeft--;
+		if (((Server.gameBoard != null && Server.gameMode != ServerConstants.CAPTURE_THE_FLAG)
+			|| (Client.totalPanel != null && Client.gameMode != ServerConstants.CAPTURE_THE_FLAG)) && livesLeft == 0)
+			dead = true;
 		blinkerCount = 0;
 		blinker.start();
 	}
@@ -200,8 +230,7 @@ public class Player
 			(int)(ServerConstants.FRAGMENT_SIZE / (double)(ServerConstants.HEALTH) * health), 5);
 		g.setColor(Color.BLACK);
 		String displayName = name.substring(0, name.indexOf(ServerConstants.NAME_SEPERATOR));
-		g.drawString(displayName, posX - (int)(g.getFontMetrics().getStringBounds(displayName, g).getWidth()) / 2, 
-			posY - ServerConstants.FRAGMENT_SIZE / 2 - 5);
+		g.drawString(displayName, posX - (int)(g.getFontMetrics().getStringBounds(displayName, g).getWidth()) / 2, posY - ServerConstants.FRAGMENT_SIZE / 2 - 5);
 		g.drawRect(posX - ServerConstants.FRAGMENT_SIZE / 2, posY - ServerConstants.FRAGMENT_SIZE / 2 - 25, ServerConstants.FRAGMENT_SIZE, 5);
 		if (hasFlag && team.equals("red"))
 			g.drawImage(blueFlag, posX - 10, posY - 20, 10, 20, null);

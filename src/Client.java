@@ -1,3 +1,9 @@
+/*
+Krish Agarwal
+5.10.19
+Client.java
+*/
+
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -25,7 +31,7 @@ public class Client
 	static TotalPanel totalPanel;
 	static JFrame frame;
 	static boolean waiting, playing, blueFlagTaken, redFlagTaken;
-	static int bulletCount = 0;
+	static int bulletCount = 0, gameMode = 0;
 
 	// This constructor is used to instantiate a Client
 	// player by defining some static field variables, making
@@ -39,8 +45,7 @@ public class Client
 		totalPanel = new TotalPanel();
 		
 		frame = new JFrame("Game");
-		frame.setSize(ServerConstants.FRAME_SIZE,
-			ServerConstants.FRAME_SIZE);
+		frame.setSize(ServerConstants.FRAME_SIZE, ServerConstants.FRAME_SIZE);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setContentPane(totalPanel);
 		frame.setVisible(true);
@@ -61,6 +66,9 @@ public class Client
 		out.println(message);
 	}
 
+	// This method is used to clear the game so that after a win
+	// situation, a Client can play again without having to rerun
+	// the program.
 	public static void clearGame()
 	{
 		try
@@ -80,6 +88,9 @@ public class Client
 		totalPanel.posMover.start();
 	}
 
+	// This method handles connecting the Client program to the
+	// Server program by assuming that the static "ip" variable
+	// has been preset by any program attempting to connect.
 	public static void connect()
 	{
 		Client.socket = null;

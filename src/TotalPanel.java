@@ -1,3 +1,9 @@
+/*
+Krish Agarwal
+5.10.19
+TotalPanel.java
+*/
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
@@ -60,14 +66,26 @@ public class TotalPanel extends JPanel implements MouseListener, KeyListener
 		// movement is smooth.
 		moverRight = new Timer(30, (e) -> Client.send(ServerConstants.MOVE_PLAYER_RIGHT + Client.playerName));
 
-		// This method is used to move the screen in a sliding
+		// This method is used to move the screen right in a sliding
 		// motion when switching between different "panels".
 		screenMoverRight = getScreenMover(() -> viewX += 20, 600, 0);
+
+		// This method is used to move the screen left in a sliding
+		// motion when switching between different "panels".
 		screenMoverLeft = getScreenMover(() -> viewX -= 20, 600, 0);
+
+		// This method is used to move the screen up in a sliding
+		// motion when switching between different "panels".
 		screenMoverUp = getScreenMover(() -> viewY -= 20, 0, 600);
+
+		// This method is used to move the screen down in a sliding
+		// motion when switching between different "panels".
 		screenMoverDown = getScreenMover(() -> viewY += 20, 0, 600);
 
-		posMover = new Timer(50, (e) ->
+		// This method is used to move the game board towards the
+		// center of the board when a win situation has occured as
+		// an animation before displaying the results of the game.
+		posMover = new Timer(25, (e) ->
 		{
 			posX += movePosX;
 			posY += movePosY;
@@ -108,23 +126,25 @@ public class TotalPanel extends JPanel implements MouseListener, KeyListener
 			(posX - ServerConstants.FRAME_SIZE / 2) / ServerConstants.FRAGMENT_SIZE - 1, 
 			(posX - ServerConstants.FRAME_SIZE / 2) / ServerConstants.FRAGMENT_SIZE + 16, refX, refY);
 		for (Player curr : Client.players.values())
-			curr.draw(g, posX + ServerConstants.FRAME_SIZE - viewX, posY - viewY);
+		{
+			if (!curr.dead)
+				curr.draw(g, posX + ServerConstants.FRAME_SIZE - viewX, posY - viewY);
+		}
 		for (Bullet bullet : Client.bullets.values())
-			bullet.draw(g, posX + ServerConstants.FRAME_SIZE - viewX, posY - viewY);
-		
-		g.setFont(new Font("Sans Serif", Font.PLAIN, 40));
+			bullet.draw(g, posX + ServerConstants.FRAME_SIZE - viewX, posY - viewY);		
 		if (showWinner)
 		{
+			g.setFont(new Font("Sans Serif", Font.PLAIN, 40));
 			g.setColor(new Color(125, 125, 125, 220));
 			g.fillRect(10 + ServerConstants.FRAME_SIZE - viewX, 10 - viewY, 580, 560);
 			g.setColor(Color.DARK_GRAY);
-			g.fillRect(70 + ServerConstants.FRAME_SIZE - viewX, 300 - viewY, 460, 60);
-			String topText = "You won!";
+			g.fillRect(185 + ServerConstants.FRAME_SIZE - viewX, 300 - viewY, 230, 60);
+			String topText = "your team won!";
 			Color winStatus = blue;
 			if (won == false)
 			{
 				winStatus = red;
-				topText = "You lost!";
+				topText = "your team lost!";
 			}
 			g.setColor(Color.BLACK);
 			g.drawString(topText, (int)(300 - g.getFontMetrics().getStringBounds(topText, g).getWidth() / 2) - 2 + ServerConstants.FRAME_SIZE - viewX, 102 - viewY);
@@ -152,11 +172,12 @@ public class TotalPanel extends JPanel implements MouseListener, KeyListener
 			g.setColor(Color.WHITE);
 			g.drawString(" flag.", 300 - secondWidth / 2 + (int)(g.getFontMetrics().getStringBounds("\"" + winner + "\"" + " got the " + losingTeam, g).getWidth())
 				+ ServerConstants.FRAME_SIZE - viewX, 200 - viewY);
-			g.drawString("Return to Main Menu", (int)(300 - g.getFontMetrics().getStringBounds("Return to Main Menu", g).getWidth() / 2)
-				+ ServerConstants.FRAME_SIZE - viewX, 350 - viewY);
+			g.setFont(new Font("Sans Serif", Font.PLAIN, 20));
+			g.drawString("return to main menu", (int)(300 - g.getFontMetrics().getStringBounds("return to main menu", g).getWidth() / 2)
+				+ ServerConstants.FRAME_SIZE - viewX, 340 - viewY);
 		}
-
 		g.setFont(new Font("Sans Serif", Font.PLAIN, 20));
+		
 		// For my reference: NamePanel
 		g.setColor(Color.BLACK);
 		String displayName = Client.playerName;
@@ -167,19 +188,19 @@ public class TotalPanel extends JPanel implements MouseListener, KeyListener
 		g.setColor(Color.DARK_GRAY);
 		g.fillRect(300 - nameWidth / 2 - 10 + ServerConstants.FRAME_SIZE - viewX, 275 + ServerConstants.FRAME_SIZE * 2 - viewY, nameWidth + 20, 50);
 		g.setColor(Color.WHITE);
-		g.drawString("Enter your name:",
-			(int)(300 - g.getFontMetrics().getStringBounds("Enter your name:", g).getWidth() / 2)
+		g.drawString("enter your name:",
+			(int)(300 - g.getFontMetrics().getStringBounds("enter your name:", g).getWidth() / 2)
 			+ ServerConstants.FRAME_SIZE - viewX, 265 + ServerConstants.FRAME_SIZE * 2 - viewY);
 		g.drawString(displayName, 300 - nameWidth / 2 + ServerConstants.FRAME_SIZE - viewX, 310 + ServerConstants.FRAME_SIZE * 2 - viewY);
 
 		// For my reference: StartPanel
-		int playWidth = (int)(g.getFontMetrics().getStringBounds("Play", g).getWidth());
+		int playWidth = (int)(g.getFontMetrics().getStringBounds("play", g).getWidth());
 		g.setColor(Color.BLACK);
 		g.fillRect(ServerConstants.FRAME_SIZE - viewX, ServerConstants.FRAME_SIZE - viewY, 600, 600);
 		g.setColor(Color.DARK_GRAY);
 		g.fillRect(260 + ServerConstants.FRAME_SIZE - viewX, 270 + ServerConstants.FRAME_SIZE - viewY, 80, 60);
 		g.setColor(Color.WHITE);
-		g.drawString("Play", 300 - playWidth / 2 + ServerConstants.FRAME_SIZE - viewX, 310 + ServerConstants.FRAME_SIZE - viewY);
+		g.drawString("play", 300 - playWidth / 2 + ServerConstants.FRAME_SIZE - viewX, 310 + ServerConstants.FRAME_SIZE - viewY);
 
 		// For my reference: ServerInputPanel
 		g.setColor(Color.BLACK);
@@ -188,8 +209,8 @@ public class TotalPanel extends JPanel implements MouseListener, KeyListener
 		g.setColor(Color.DARK_GRAY);
 		g.fillRect(290 - ipWidth / 2 + ServerConstants.FRAME_SIZE * 2 - viewX, 275 + ServerConstants.FRAME_SIZE - viewY, ipWidth + 20, 50);
 		g.setColor(Color.WHITE);
-		g.drawString("Enter the IP of the Server (continue if on the same machine):",
-			(int)(300 - g.getFontMetrics().getStringBounds("Enter the IP of the Server (continue if on the same machine):", g).getWidth() / 2)
+		g.drawString("enter the ip of the server (continue if on the same machine):",
+			(int)(300 - g.getFontMetrics().getStringBounds("enter the ip of the server (continue if on the same machine):", g).getWidth() / 2)
 			+ ServerConstants.FRAME_SIZE * 2 - viewX, 265 + ServerConstants.FRAME_SIZE - viewY);
 		g.drawString(Client.ip, 300 - ipWidth / 2 + ServerConstants.FRAME_SIZE * 2 - viewX, 310 + ServerConstants.FRAME_SIZE - viewY);
 		
@@ -201,7 +222,15 @@ public class TotalPanel extends JPanel implements MouseListener, KeyListener
 			+ ServerConstants.FRAME_SIZE * 2 - viewX, 325 - viewY);
 
 		if (loading)
-			g.drawString("Loading...", (int)(300 - g.getFontMetrics().getStringBounds("Loading...", g).getWidth() / 2), 400);
+			g.drawString("loading...", (int)(300 - g.getFontMetrics().getStringBounds("loading...", g).getWidth() / 2), 400);
+		
+		if ((viewX == ServerConstants.FRAME_SIZE && viewY == ServerConstants.FRAME_SIZE * 2)
+			|| (viewX == ServerConstants.FRAME_SIZE * 2 && viewY == ServerConstants.FRAME_SIZE))
+		{
+			g.setFont(new Font("Sans Serif", Font.ITALIC, 15));
+			g.drawString("[press enter to continue]", ServerConstants.FRAME_SIZE - 30
+				- (int)(g.getFontMetrics().getStringBounds("[press enter to continue]", g).getWidth()), 400);
+		}
 	}
 
 	// This method is part of the KeyListener. Whenever a key is
@@ -216,7 +245,7 @@ public class TotalPanel extends JPanel implements MouseListener, KeyListener
 				loading = true;
 				repaint();
 				Client.playerName += ServerConstants.NAME_SEPERATOR +
-					ServerConstants.getLocalHost(Client.frame, "Not connected to internet") + System.currentTimeMillis();
+					ServerConstants.getLocalHost(Client.frame, "not connected to internet") + System.currentTimeMillis();
 				loading = false;
 				repaint();
 				moveUp();
@@ -339,14 +368,14 @@ public class TotalPanel extends JPanel implements MouseListener, KeyListener
 			if (Client.playing)
 			{
 				Player player = Client.players.get(Client.playerName);
-				if (player == null)
+				if (player == null || player.dead)
 					return;
-				Client.send(ServerConstants.CREATE_BULLET + (Client.playerName + Client.bulletCount) + '\0' + 
+				Client.send(ServerConstants.CREATE_BULLET + (Client.playerName + ServerConstants.NAME_SEPERATOR + Client.bulletCount) + '\0' + 
 					Bullet.toString(player.posX, player.posY, e.getX() - ServerConstants.FRAME_SIZE / 2 + player.posX,
 						e.getY() - ServerConstants.FRAME_SIZE / 2 + player.posY, player.team));
 				Client.bulletCount++;
 			}
-			else if (showWinner && e.getX() >= 70 && e.getX() <= 530 && e.getY() >= 300 && e.getY() <= 360)
+			else if (showWinner && e.getX() >= 185 && e.getX() <= 415 && e.getY() >= 300 && e.getY() <= 360)
 				moveDown();
 		}
 	}
@@ -406,11 +435,15 @@ public class TotalPanel extends JPanel implements MouseListener, KeyListener
 		return !(moverUp.isRunning() || moverDown.isRunning() || moverLeft.isRunning() || moverRight.isRunning());
 	}
 
+	// This method checks that all the screen mover timers are stopped
+	// so that two are not being run at the same time.
 	public boolean allScreenMoversStopped()
 	{
 		return !(screenMoverUp.isRunning() || screenMoverDown.isRunning() || screenMoverLeft.isRunning() || screenMoverRight.isRunning());
 	}
 
+	// This method stops all the timers that move the current player
+	// so that two are not being run at the same time.
 	public void stopAll()
 	{
 		moverUp.stop();
@@ -419,6 +452,9 @@ public class TotalPanel extends JPanel implements MouseListener, KeyListener
 		moverRight.stop();
 	}
 
+	// This method returns a screen mover Timer. This method is present
+	// because the code for the different screen movers was very similar,
+	// so this reduces code.
 	private Timer getScreenMover(Runnable runner, int xDifference, int yDifference)
 	{
 		return new Timer(30, new ActionListener()
@@ -436,7 +472,7 @@ public class TotalPanel extends JPanel implements MouseListener, KeyListener
 					posX = posY = ServerConstants.BOARD_SIZE / 2;
 					movePosX = movePosY = 0;
 					waitText = winner = winningTeam = "";
-					showWinner = won = false;
+					Client.blueFlagTaken = Client.redFlagTaken = showWinner = won = false;
 					origX = viewX;
 					origY = viewY;
 				}
