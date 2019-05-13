@@ -113,5 +113,39 @@ public class Client
 			System.err.println("Fatal connection error");
 			ie.printStackTrace();
 		}
+		frame.addWindowListener(new WindowListener()
+		{
+			// This method is part of the WindowListener but
+			// is not used.
+			public void windowOpened(WindowEvent e) {}
+			
+			// This method is part of the WindowListener but
+			// is not used.
+			public void windowIconified(WindowEvent e) {}
+			
+			// This method is part of the WindowListener but
+			// is not used.
+			public void windowDeiconified(WindowEvent e) {}
+			
+			// This method is part of the WindowListener but
+			// is not used.
+			public void windowDeactivated(WindowEvent e) {}
+			
+			// This method is part of the WindowListener but
+			// is not used.
+			public void windowClosed(WindowEvent e) {}
+			
+			// This method is part of the WindowListener but
+			// is not used.
+			public void windowActivated(WindowEvent e) {}
+
+			// This method is run when the Window is closing
+			// to notify the Server to delete the player.
+			public void windowClosing(WindowEvent e)
+			{
+				if (out != null)
+					send(ServerConstants.DELETE_PLAYER + Client.playerName);
+			}
+		});
 	}
 }

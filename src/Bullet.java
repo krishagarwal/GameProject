@@ -6,6 +6,8 @@ Bullet.java
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.AffineTransform;
+
 import javax.swing.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -14,17 +16,25 @@ import java.util.concurrent.ConcurrentHashMap;
 // line that the bullet follows.
 public class Bullet
 {
-	int posX, posY, addX, addY;
+	double posX, posY, addX, addY, degree;
+	int fromX, fromY;
 	String team;
+	Image bullet;
 
 	// This constructor instantiates a Bullet starting from (x, y)
 	// and adding xAdd and yAdd to update the position.
-	private Bullet(int x, int y, int xAdd, int yAdd, String team)
+	private Bullet(double x, double y, double xAdd, double yAdd, String team)
 	{
-		posX = x;
-		posY = y;
 		addX = xAdd;
 		addY = yAdd;
+		posX = x + addX * 25 / 6;
+		posY = y + addY * 25 / 6;
+		fromX = (int)posX;
+		fromY = (int)posY;
+		degree = Math.atan((double)addY / addX);
+		if (addX < 0)
+			degree += Math.PI;
+		bullet = new ImageIcon("../images/bullet.png").getImage();
 		this.team = team;
 	}
 
@@ -38,12 +48,12 @@ public class Bullet
 		if (fromX == toX && fromY == toY)
 		{
 			radians = Math.random() * 2 * Math.PI;
-			return new Bullet(fromX, fromY, (int)(Math.cos(radians) * 6), (int)(Math.sin(radians) * 6), team);
+			return new Bullet(fromX, fromY, Math.cos(radians) * 6, Math.sin(radians) * 6, team);
 		}
 		if (fromX == toX)
 			return new Bullet(fromX, fromY, 0, Math.abs(toY - fromY) / (toY - fromY) * 6, team);
-		return new Bullet(fromX, fromY, (int)(Math.cos(radians) * 6) * Math.abs(toX - fromX) / (toX - fromX),
-			(int)(Math.sin(radians) * 6) * Math.abs(toX - fromX) / (toX - fromX), team);
+		return new Bullet(fromX, fromY, Math.cos(radians) * 6 * Math.abs(toX - fromX) / (toX - fromX),
+			Math.sin(radians) * 6 * Math.abs(toX - fromX) / (toX - fromX), team);
 	}
 
 	// This method takes the String input sent to all Clients when
@@ -85,11 +95,25 @@ public class Bullet
 	// so that each Bullet can be drawn on the screen.
 	public void draw(Graphics g, int refX, int refY)
 	{
-		int posX = this.posX + ServerConstants.FRAME_SIZE / 2 - refX;
-		int posY = this.posY + ServerConstants.FRAME_SIZE / 2 - refY;
+		int posX = (int)(this.posX + ServerConstants.FRAME_SIZE / 2 - refX);
+		int posY = (int)(this.posY + ServerConstants.FRAME_SIZE / 2 - refY);
 		g.setColor(Color.RED);
 		if (team.equals("blue"))
 			g.setColor(Color.BLUE);
+		Graphics2D g2d = (Graphics2D)g;
+		AffineTransform old = g2d.getTransform();
+		// if (Math.PI / 2 < degree && degree <= Math.PI * 1.5)
+		// {
+		// 	g2d.rotate(degree - Math.PI, fromX, fromY);
+		// 	g2d.drawImage(bullet, posX - 15, posY - 7, 15, 10, null);
+		// }
+		// else
+		// {
+		// 	g2d.rotate(degree, fromX, fromY);
+		// 	g2d.drawImage(bullet, posX - 7, posY - 5, 15, 10, null);
+		// // }		
+		// g2d.setTransform(old);
+		
 		g.fillOval(posX - ServerConstants.BULLET_SIZE / 2, posY - ServerConstants.BULLET_SIZE / 2, ServerConstants.BULLET_SIZE, ServerConstants.BULLET_SIZE);
 	}
 }

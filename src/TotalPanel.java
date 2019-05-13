@@ -15,14 +15,15 @@ import javax.swing.*;
 // displays them all reative to a variable determining the current
 // screen to display to allow the capability of sliding the screen
 // instead of a sudden change using CardLayout.
-public class TotalPanel extends JPanel implements MouseListener, KeyListener
+public class TotalPanel extends JPanel implements MouseListener, MouseMotionListener, KeyListener
 {
 	public static int viewX, viewY, origX, origY, posX, posY, movePosX, movePosY;
-	String waitText, winningTeam, winner;
+	String waitText, winningTeam, winner, spectating;
 	private Board gameBoard;
 	Timer screenMoverLeft, screenMoverRight, screenMoverDown, screenMoverUp, moverUp, moverDown, moverLeft, moverRight, posMover;
 	boolean loading, showWinner, won;
 	private Color red, blue;
+	Image heart;
 
 	// This constructor initializes the JPanel. The layout is set to
 	// null because all components are drawn in paintComponent(). It
@@ -31,16 +32,17 @@ public class TotalPanel extends JPanel implements MouseListener, KeyListener
 	public TotalPanel()
 	{
 		setLayout(null);
-		waitText = winningTeam = winner = "";
-		setFocusable(true);
+		spectating = waitText = winningTeam = winner = "";
 		requestFocus();
 		addMouseListener(this);
 		addKeyListener(this);
+		addMouseMotionListener(this);
 		posX = posY = ServerConstants.FRAME_SIZE / 2;
 		origX = viewX = ServerConstants.FRAME_SIZE;
 		origY = viewY = 2 * ServerConstants.FRAME_SIZE;
 		gameBoard = new Board();
 		loading = won = false;
+		heart = new ImageIcon("../images/heart.png").getImage();
 		
 		// This method is used to send information to the Server
 		// that the player is moving up. It is placed in a Timer
@@ -111,12 +113,21 @@ public class TotalPanel extends JPanel implements MouseListener, KeyListener
 
 		// For my reference: GamePanel
 		g.setFont(new Font("Sans Serif", Font.PLAIN, 12));
-		Player me = Client.players.get(Client.playerName);
-		if (me != null)
+		Player me = Client.players.get(Client.playerName), spectatingPlayer = Client.players.get(spectating);
+		boolean drawHearts = false, showSpectating = false;
+		if (me != null && !me.dead)
 		{
 			posX = me.posX;
 			posY = me.posY;
+			drawHearts = true;
 		}
+		else if (spectatingPlayer != null)
+		{
+			posX = spectatingPlayer.posX;
+			posY = spectatingPlayer.posY;
+			showSpectating = true;
+		}
+		
 		int refX = (posX - ServerConstants.FRAME_SIZE / 2) % ServerConstants.FRAGMENT_SIZE * -1
 			- ServerConstants.FRAGMENT_SIZE + ServerConstants.FRAME_SIZE - viewX;
 		int refY = (posY - ServerConstants.FRAME_SIZE / 2) % ServerConstants.FRAGMENT_SIZE * -1
@@ -176,7 +187,22 @@ public class TotalPanel extends JPanel implements MouseListener, KeyListener
 			g.drawString("return to main menu", (int)(300 - g.getFontMetrics().getStringBounds("return to main menu", g).getWidth() / 2)
 				+ ServerConstants.FRAME_SIZE - viewX, 340 - viewY);
 		}
+		else if (drawHearts && Client.gameMode != ServerConstants.CAPTURE_THE_FLAG)
+		{
+			if (me.livesLeft >= 1)
+				g.drawImage(heart, 540 + ServerConstants.FRAME_SIZE - viewX, 10 - viewY, 50, 50, null);
+			if (me.livesLeft >= 2)
+				g.drawImage(heart, 480 + ServerConstants.FRAME_SIZE - viewX, 10 - viewY, 50, 50, null);
+			if (me.livesLeft >= 3)
+				g.drawImage(heart, 420 + ServerConstants.FRAME_SIZE - viewX, 10 - viewY, 50, 50, null);
+		}
 		g.setFont(new Font("Sans Serif", Font.PLAIN, 20));
+		if (showSpectating)
+		{
+			g.setColor(Color.BLACK);
+			String display = "Spectating \"" + spectating.substring(0, spectating.indexOf(ServerConstants.NAME_SEPERATOR)) + "\"";
+			g.drawString(display, (int)(300 - g.getFontMetrics().getStringBounds(display, g).getWidth() / 2), 100);
+		}
 		
 		// For my reference: NamePanel
 		g.setColor(Color.BLACK);
@@ -262,40 +288,6 @@ public class TotalPanel extends JPanel implements MouseListener, KeyListener
 			{
 				Client.connect();
 				moveUp();
-				Client.frame.addWindowListener(new WindowListener()
-				{
-					// This method is part of the WindowListener but
-					// is not used.
-					public void windowOpened(WindowEvent e) {}
-					
-					// This method is part of the WindowListener but
-					// is not used.
-					public void windowIconified(WindowEvent e) {}
-					
-					// This method is part of the WindowListener but
-					// is not used.
-					public void windowDeiconified(WindowEvent e) {}
-					
-					// This method is part of the WindowListener but
-					// is not used.
-					public void windowDeactivated(WindowEvent e) {}
-					
-					// This method is part of the WindowListener but
-					// is not used.
-					public void windowClosed(WindowEvent e) {}
-					
-					// This method is part of the WindowListener but
-					// is not used.
-					public void windowActivated(WindowEvent e) {}
-
-					// This method is run when the Window is closing
-					// to notify the Server to delete the player.
-					public void windowClosing(WindowEvent e)
-					{
-						if (Client.out != null)
-							Client.send(ServerConstants.DELETE_PLAYER + Client.playerName);
-					}
-				});
 			}
 			else if (evt.getKeyCode() == KeyEvent.VK_BACK_SPACE && Client.ip.length() > 0)
 			{
@@ -303,7 +295,7 @@ public class TotalPanel extends JPanel implements MouseListener, KeyListener
 				repaint();
 			}
 		}
-		else if (Client.playing && viewX == ServerConstants.FRAME_SIZE && viewY == 0 && allAreStopped())
+		else if (Client.playing && viewX == ServerConstants.FRAME_SIZE && viewY == 0 && allAreStopped() && !Client.players.get(Client.playerName).dead)
 		{
 			int e = evt.getKeyCode();
 			if (e == KeyEvent.VK_UP)
@@ -392,6 +384,20 @@ public class TotalPanel extends JPanel implements MouseListener, KeyListener
 	// This method is part of the MouseListener but is not used.
 	public void mouseExited(MouseEvent e) {}
 
+	public void mouseDragged(MouseEvent e) {}
+
+	public void mouseMoved(MouseEvent e)
+	{
+		Player me = Client.players.get(Client.playerName);
+		if (me == null)
+			return;
+		int y = e.getY() - ServerConstants.FRAME_SIZE / 2, x = e.getX() - ServerConstants.FRAME_SIZE / 2;
+		double deg = Math.atan((double)y / x);
+		if (x < 0)
+			deg += Math.PI;
+		Client.send(ServerConstants.MOVE_GUN + Client.playerName + '\0' + deg);
+	}
+
 	// This method is used to set the text of the wait "panel"
 	// for when the countdown is occuring in the Server program.
 	public void setWaitText(String message)
@@ -400,26 +406,32 @@ public class TotalPanel extends JPanel implements MouseListener, KeyListener
 		repaint();
 	}
 
-	// This method starts the Timer to move the screen to switch
-	// between "panels" smoothly.
+	// This method starts the Timer to move the screen right
+	// to switch between "panels" smoothly.
 	public void moveRight()
 	{
 		if (allScreenMoversStopped())
 			screenMoverRight.start();
 	}
 
+	// This method starts the Timer to move the screen left
+	// to switch between "panels" smoothly.
 	public void moveLeft()
 	{
 		if (allScreenMoversStopped())
 			screenMoverLeft.start();
 	}
 
+	// This method starts the Timer to move the screen down
+	// to switch between "panels" smoothly.
 	public void moveDown()
 	{
 		if (allScreenMoversStopped())
 			screenMoverDown.start();
 	}
 
+	// This method starts the Timer to move the screen up
+	// to switch between "panels" smoothly.
 	public void moveUp()
 	{
 		if (allScreenMoversStopped())
@@ -459,6 +471,9 @@ public class TotalPanel extends JPanel implements MouseListener, KeyListener
 	{
 		return new Timer(30, new ActionListener()
 		{
+			// This method runs the given Runnable class method run()
+			// and checks when to stop the Timer. This is used for the
+			// screen movers and is here to reduce code.
 			public void actionPerformed(ActionEvent e)
 			{
 				runner.run();
@@ -471,7 +486,7 @@ public class TotalPanel extends JPanel implements MouseListener, KeyListener
 					screenMoverRight.stop();
 					posX = posY = ServerConstants.BOARD_SIZE / 2;
 					movePosX = movePosY = 0;
-					waitText = winner = winningTeam = "";
+					winner = winningTeam = "";
 					Client.blueFlagTaken = Client.redFlagTaken = showWinner = won = false;
 					origX = viewX;
 					origY = viewY;

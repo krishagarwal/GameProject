@@ -42,6 +42,7 @@ public final class ServerConstants
 	public static final String REVIVE_PLAYER = 			"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	public static final String WIN = 					"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	public static final String FLAG_TAKEN = 			"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
+	public static final String MOVE_GUN =	 			"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	
 	// For my reference: used as a separator, must have special
 	// character
@@ -50,7 +51,7 @@ public final class ServerConstants
 	// For my reference: constant numerical fields
 	public static final int PORT_NUMBER = 4444;
 	public static final int WAIT_TIME = 3;
-	public static final int BULLET_SIZE = 10;
+	public static final int BULLET_SIZE = 5;
 	public static final int FRAME_SIZE = 600;
 	public static final int BOARD_SIZE = 1350;
 	public static final int BOARD_FRAGMENTS = 27;
@@ -58,7 +59,6 @@ public final class ServerConstants
 	public static final int HEALTH = 100;
 	public static final int HEALTH_DECREASE = 5;
 	public static final int MOVE_LENGTH = 5;
-	public static final int WALL_THICKNESS = 5;
 
 	// For my regerence: game modes
 	public static final int CAPTURE_THE_FLAG = 1;

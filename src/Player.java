@@ -6,6 +6,8 @@ Player.java
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.AffineTransform;
+
 import javax.swing.*;
 
 // This class is used to store information about each player
@@ -16,7 +18,8 @@ public class Player
 {
 	String name, team;
 	int posX, posY, health, blinkerCount, livesLeft;
-	Image redFlag, blueFlag, face1, left1, right1, face2, left2, right2, costume;
+	double gunDegree;
+	Image redFlag, blueFlag, face1, left1, right1, face2, left2, right2, costume, rightGun, leftGun;
 	Timer blinker;
 	boolean show, hasFlag, dead;
 
@@ -40,11 +43,13 @@ public class Player
 		right2 = new ImageIcon("../images/right2.png").getImage();
 		redFlag = new ImageIcon("../images/red_flag_icon.png").getImage();
 		blueFlag = new ImageIcon("../images/blue_flag_icon.png").getImage();
+		rightGun = new ImageIcon("../images/gun_right.png").getImage();
+		leftGun = new ImageIcon("../images/gun_left.png").getImage();
 		costume = face1;
 		health = ServerConstants.HEALTH;
 		show = true;
 		hasFlag = false;
-		blinkerCount = 0;
+		gunDegree = blinkerCount = 0;
 		blinker = new Timer(250, new ActionListener()
 		{
 			// This method is used in a Timer to make the
@@ -187,7 +192,7 @@ public class Player
 	// team. It also decreses the number of lives left.
 	// This method is used when the Player is shot and the
 	// Player ends up with 0 health, at which point revive is required.
-	public void revive(int newPosX)
+	public void revive(int newPosX, String shooter)
 	{
 		hasFlag = false;
 		if (Client.totalPanel != null && team.equals("red"))
@@ -202,7 +207,11 @@ public class Player
 		livesLeft--;
 		if (((Server.gameBoard != null && Server.gameMode != ServerConstants.CAPTURE_THE_FLAG)
 			|| (Client.totalPanel != null && Client.gameMode != ServerConstants.CAPTURE_THE_FLAG)) && livesLeft == 0)
+		{
+			if (Client.totalPanel != null && (Client.playerName.equals(name) || Client.totalPanel.spectating.equals(name)))
+				Client.totalPanel.spectating = shooter;
 			dead = true;
+		}
 		blinkerCount = 0;
 		blinker.start();
 	}
@@ -236,5 +245,19 @@ public class Player
 			g.drawImage(blueFlag, posX - 10, posY - 20, 10, 20, null);
 		else if (hasFlag && team.equals("blue"))
 			g.drawImage(redFlag, posX - 10, posY - 20, 10, 20, null);
+		Graphics2D g2d = (Graphics2D)g;
+		AffineTransform old = g2d.getTransform();
+		// g2d.rotate(gunDegree, posX, posY);
+		if (Math.PI / 2 < gunDegree && gunDegree <= Math.PI * 1.5)
+		{
+			g2d.rotate(gunDegree - Math.PI, posX, posY);
+			g2d.drawImage(leftGun, posX - 25, posY - 7, 25, 15, null);
+		}
+		else
+		{
+			g2d.rotate(gunDegree, posX, posY);
+			g2d.drawImage(rightGun, posX, posY - 7, 25, 15, null);
+		}
+		g2d.setTransform(old);
 	}
 }

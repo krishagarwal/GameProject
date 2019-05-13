@@ -48,7 +48,7 @@ public class Server implements Runnable
 	// being run.
 	public static void main(String[] args)
 	{
-		gameMode = ServerConstants.CAPTURE_THE_FLAG;
+		gameMode = ServerConstants.RED_VS_BLUE;
 		Thread message = new Thread(new Runnable()
 		{
 			// This is a method used to display the IP address that
@@ -100,12 +100,14 @@ public class Server implements Runnable
 				for (String name : bullets.keySet())
 				{
 					Bullet curr = bullets.get(name);
+					if (curr == null)
+						return;
 					curr.update();
 					sendToAll(ServerConstants.UPDATE_BULLET + name);
-					Player nearest = getNearestOpponent(curr.posX, curr.posY, curr.team);
+					Player nearest = getNearestOpponent((int)(curr.posX), (int)(curr.posY), curr.team);
 					if (nearest == null)
 						return;
-					if (nearest.getDistanceTo(curr.posX, curr.posY) < ServerConstants.FRAGMENT_SIZE / 2 * Math.sqrt(2))
+					if (nearest.getDistanceTo((int)(curr.posX), (int)(curr.posY)) < ServerConstants.FRAGMENT_SIZE / 2)
 					{
 						stopBullet(name);
 						nearest.decreaseHealth();
@@ -114,11 +116,18 @@ public class Server implements Runnable
 						{
 							int newPosX = (int)(Math.random() * (ServerConstants.BOARD_SIZE - ServerConstants.FRAGMENT_SIZE * 3)
 								+ 1.5 * ServerConstants.FRAGMENT_SIZE) / 5 * 5;
-							sendToAll(ServerConstants.REVIVE_PLAYER + nearest.name + '\0' + newPosX + '\0' + (name.substring(0, name.lastIndexOf(ServerConstants.NAME_SEPERATOR))));
-							nearest.revive(newPosX);
+							String shooter = name.substring(0, name.lastIndexOf(ServerConstants.NAME_SEPERATOR));
+							sendToAll(ServerConstants.REVIVE_PLAYER + nearest.name + '\0' + newPosX + '\0' + shooter);
+							nearest.revive(newPosX, shooter);
+							
+							if (gameMode == ServerConstants.RED_VS_BLUE && (allAreDead("red") || allAreDead("blue")))
+							{
+								sendToAll(ServerConstants.WIN + shooter);
+								clearGame();
+							}
 						}
 					}
-					else if (gameBoard.total[curr.posY / ServerConstants.FRAGMENT_SIZE][curr.posX / ServerConstants.FRAGMENT_SIZE] == 't')
+					else if (gameBoard.total[(int)(curr.posY / ServerConstants.FRAGMENT_SIZE)][(int)(curr.posX / ServerConstants.FRAGMENT_SIZE)] == 't')
 						stopBullet(name);
 				}
 			}
@@ -171,6 +180,16 @@ public class Server implements Runnable
 		}
 	}
 
+	public static boolean allAreDead(String team)
+	{
+		for (Player curr : players.values())
+		{
+			if (curr.team.equals(team) && !curr.dead)
+				return false;
+		}
+		return true;
+	}
+
 	// This constructor is used to instantiate a new Server object,
 	// which stores details on how to communcate with the Server
 	// program and the current Client. It uses an object of the Socket
@@ -181,7 +200,6 @@ public class Server implements Runnable
 	public Server(Socket socket)
 	{
 		this.socket = socket;
-
 		try
 		{
 			out = new PrintWriter(socket.getOutputStream(), true);
@@ -227,7 +245,8 @@ public class Server implements Runnable
 				boolean sendInfo = true;
 				boolean[] gameStatus = new boolean[] {false, false};
 				String input = in.nextLine();
-				if (input.startsWith(ServerConstants.MOVE_PLAYER_UP))
+				if (input.startsWith(ServerConstants.UPDATE_BULLET));
+				else if (input.startsWith(ServerConstants.MOVE_PLAYER_UP))
 				{
 					Player curr = players.get(input.substring(ServerConstants.MOVE_PLAYER_UP.length()));
 					if (!gameBoard.isAbove(curr.posX, curr.posY))
@@ -272,12 +291,12 @@ public class Server implements Runnable
 						Player.getNewPlayer(input.substring(ServerConstants.ADD_PLAYER.length())));
 				if (sendInfo)
 					sendToAll(input);
-				if (gameStatus[0])
+				if (gameMode == ServerConstants.CAPTURE_THE_FLAG && gameStatus[0])
 				{
 					players.get(input.substring(input.lastIndexOf('\1') + 1)).hasFlag = true;
 					sendToAll(ServerConstants.FLAG_TAKEN + input.substring(input.lastIndexOf('\1') + 1));
 				}
-				if (gameStatus[1])
+				if (gameMode == ServerConstants.CAPTURE_THE_FLAG && gameStatus[1])
 				{
 					sendToAll(ServerConstants.WIN + input.substring(input.lastIndexOf('\1') + 1));
 					clearGame();

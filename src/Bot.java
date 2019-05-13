@@ -45,7 +45,7 @@ public class Bot
 			public void actionPerformed(ActionEvent e)
 			{
 				Player player = Server.players.get(name);
-				if (player == null)
+				if (player == null || player.dead)
 				{
 					mover.stop();
 					return;
@@ -53,6 +53,12 @@ public class Bot
 				Player nearest = Server.getNearestOpponent(player.posX, player.posY, player.team);
 				if (nearest == null)
 					return;
+				
+				int y = nearest.posY - player.posY, x = nearest.posX - player.posX;
+				double deg = Math.atan((double)y / x);
+				if (x < 0)
+					deg += Math.PI;
+				Server.sendToAll(ServerConstants.MOVE_GUN + name + '\0' + deg);
 				
 				if (bulletCount % 10 == 0)
 				{

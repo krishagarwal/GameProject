@@ -45,6 +45,9 @@ public class ServerThread implements Runnable
 						Client.send(ServerConstants.DELETE_PLAYER + Client.playerName);
 						Client.waiting = true;
 					}
+					else if (!Client.waiting && input.startsWith(ServerConstants.MOVE_GUN))
+						Client.players.get(input.substring(ServerConstants.MOVE_GUN.length(), input.indexOf('\0'))).gunDegree
+							= Double.parseDouble(input.substring(input.indexOf('\0') + 1));
 					else if (!Client.waiting && input.startsWith(ServerConstants.FLAG_TAKEN))
 					{
 						Player player = Client.players.get(input.substring(ServerConstants.FLAG_TAKEN.length()));
@@ -56,13 +59,16 @@ public class ServerThread implements Runnable
 					}
 					else if (input.startsWith(ServerConstants.WIN))
 					{
-						Client.playing = false;
-						String name = input.substring(ServerConstants.WIN.length());
-						Client.totalPanel.stopAll();
-						Client.totalPanel.winningTeam = Client.players.get(name).team;
-						if (Client.totalPanel.winningTeam.equals(Client.players.get(Client.playerName).team))
-							Client.totalPanel.won = true;
-						Client.totalPanel.winner = name.substring(0, name.indexOf(ServerConstants.NAME_SEPERATOR));
+						if (!Client.waiting)
+						{
+							Client.playing = false;
+							String name = input.substring(ServerConstants.WIN.length());
+							Client.totalPanel.stopAll();
+							Client.totalPanel.winningTeam = Client.players.get(name).team;
+							if (Client.totalPanel.winningTeam.equals(Client.players.get(Client.playerName).team))
+								Client.totalPanel.won = true;
+							Client.totalPanel.winner = name.substring(0, name.indexOf(ServerConstants.NAME_SEPERATOR));
+						}
 						Client.clearGame();
 						if (Client.waiting)
 						{
@@ -70,11 +76,11 @@ public class ServerThread implements Runnable
 							Client.waiting = false;
 						}
 					}
-					else if (!Client.waiting && input.startsWith(ServerConstants.REVIVE_PLAYER))
+					else if (!Client.waiting && input.startsWith(ServerConstants.REVIVE_PLAYER) && !input.startsWith(ServerConstants.WIN))
 					{
 						String killed = input.substring(ServerConstants.REVIVE_PLAYER.length(), input.indexOf('\0'));
 						String killer = input.substring(input.lastIndexOf('\0') + 1);
-						Client.players.get(killed).revive(Integer.parseInt(input.substring(input.indexOf('\0') + 1, input.lastIndexOf('\0'))));
+						Client.players.get(killed).revive(Integer.parseInt(input.substring(input.indexOf('\0') + 1, input.lastIndexOf('\0'))), killer);
 						System.out.println("\"" + killer.substring(0, killer.indexOf(ServerConstants.NAME_SEPERATOR))
 							+ "\" killed \"" + killed.substring(0, killed.indexOf(ServerConstants.NAME_SEPERATOR)) + "\"");
 					}
@@ -108,7 +114,7 @@ public class ServerThread implements Runnable
 					else if (!Client.waiting && input.startsWith(ServerConstants.ADD_PLAYER))
 						Client.players.put(input.substring(ServerConstants.ADD_PLAYER.length(), input.indexOf('\0')), 
 							Player.getNewPlayer(input.substring(ServerConstants.ADD_PLAYER.length())));
-					else if (input.startsWith(ServerConstants.READY_TO_PLAY))
+					else if (input.startsWith(ServerConstants.READY_TO_PLAY) && !input.startsWith(ServerConstants.ADD_PLAYER))
 					{
 						Client.gameMode = Integer.parseInt(input.substring(ServerConstants.READY_TO_PLAY.length()));
 						Client.playing = true;
