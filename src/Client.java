@@ -1,6 +1,6 @@
 /*
 Krish Agarwal
-5.10.19
+5.12.19
 Client.java
 */
 
@@ -32,6 +32,7 @@ public class Client
 	static JFrame frame;
 	static boolean waiting, playing, blueFlagTaken, redFlagTaken;
 	static int bulletCount = 0, gameMode = 0;
+	static WindowListener frameListener;
 
 	// This constructor is used to instantiate a Client
 	// player by defining some static field variables, making
@@ -49,6 +50,41 @@ public class Client
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setContentPane(totalPanel);
 		frame.setVisible(true);
+
+		frameListener = new WindowListener()
+		{
+			// This method is part of the WindowListener but
+			// is not used.
+			public void windowOpened(WindowEvent e) {}
+			
+			// This method is part of the WindowListener but
+			// is not used.
+			public void windowIconified(WindowEvent e) {}
+			
+			// This method is part of the WindowListener but
+			// is not used.
+			public void windowDeiconified(WindowEvent e) {}
+			
+			// This method is part of the WindowListener but
+			// is not used.
+			public void windowDeactivated(WindowEvent e) {}
+			
+			// This method is part of the WindowListener but
+			// is not used.
+			public void windowClosed(WindowEvent e) {}
+			
+			// This method is part of the WindowListener but
+			// is not used.
+			public void windowActivated(WindowEvent e) {}
+
+			// This method is run when the Window is closing
+			// to notify the Server to delete the player.
+			public void windowClosing(WindowEvent e)
+			{
+				if (out != null)
+					send(ServerConstants.DELETE_PLAYER + Client.playerName);
+			}
+		};
 	}
 
 	// This method is the first method run when the Client program
@@ -83,9 +119,11 @@ public class Client
 		bulletCount = 0;
 		players.clear();
 		bullets.clear();
-		TotalPanel.movePosX = Math.abs(300 - TotalPanel.posX) / (300 - TotalPanel.posX) * 5;
-		TotalPanel.movePosY = Math.abs(300 - TotalPanel.posY) / (300 - TotalPanel.posY) * 5;
+		TotalPanel.movePosX = Math.abs(ServerConstants.BOARD_SIZE / 2 - TotalPanel.posX) / (ServerConstants.BOARD_SIZE / 2 - TotalPanel.posX) * 5;
+		TotalPanel.movePosY = Math.abs(ServerConstants.BOARD_SIZE / 2 - TotalPanel.posY) / (ServerConstants.BOARD_SIZE / 2 - TotalPanel.posY) * 5;
 		totalPanel.posMover.start();
+		totalPanel.gameBoard.resetBoard();
+		frame.removeWindowListener(frameListener);
 	}
 
 	// This method handles connecting the Client program to the
@@ -113,39 +151,6 @@ public class Client
 			System.err.println("Fatal connection error");
 			ie.printStackTrace();
 		}
-		frame.addWindowListener(new WindowListener()
-		{
-			// This method is part of the WindowListener but
-			// is not used.
-			public void windowOpened(WindowEvent e) {}
-			
-			// This method is part of the WindowListener but
-			// is not used.
-			public void windowIconified(WindowEvent e) {}
-			
-			// This method is part of the WindowListener but
-			// is not used.
-			public void windowDeiconified(WindowEvent e) {}
-			
-			// This method is part of the WindowListener but
-			// is not used.
-			public void windowDeactivated(WindowEvent e) {}
-			
-			// This method is part of the WindowListener but
-			// is not used.
-			public void windowClosed(WindowEvent e) {}
-			
-			// This method is part of the WindowListener but
-			// is not used.
-			public void windowActivated(WindowEvent e) {}
-
-			// This method is run when the Window is closing
-			// to notify the Server to delete the player.
-			public void windowClosing(WindowEvent e)
-			{
-				if (out != null)
-					send(ServerConstants.DELETE_PLAYER + Client.playerName);
-			}
-		});
+		frame.addWindowListener(frameListener);
 	}
 }

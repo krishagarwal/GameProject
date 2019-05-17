@@ -1,6 +1,6 @@
 /*
 Krish Agarwal
-5.10.19
+5.12.19
 ServerConstants.java
 */
 
@@ -43,6 +43,9 @@ public final class ServerConstants
 	public static final String WIN = 					"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	public static final String FLAG_TAKEN = 			"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	public static final String MOVE_GUN =	 			"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
+	public static final String NEW_WAVE =	 			"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
+	public static final String CREATE_SHRAPNEL = 		"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
+	public static final String BLOW_UP = 				"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	
 	// For my reference: used as a separator, must have special
 	// character
@@ -51,7 +54,7 @@ public final class ServerConstants
 	// For my reference: constant numerical fields
 	public static final int PORT_NUMBER = 4444;
 	public static final int WAIT_TIME = 3;
-	public static final int BULLET_SIZE = 5;
+	public static final int BULLET_SIZE = 8;
 	public static final int FRAME_SIZE = 600;
 	public static final int BOARD_SIZE = 1350;
 	public static final int BOARD_FRAGMENTS = 27;

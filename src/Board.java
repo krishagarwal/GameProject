@@ -1,6 +1,6 @@
 /*
 Krish Agarwal
-5.10.19
+5.12.19
 Board.java
 */
 
@@ -12,7 +12,7 @@ import javax.swing.*;
 public class Board
 {
 	char[][] total;
-	Image wall, redFlag, blueFlag;
+	Image wall, tnt, redFlag, blueFlag;
 	
 	// This constructor is used to instantiate a new Board object. A
 	// 2D character array is stored to define the layour of the board.
@@ -23,37 +23,10 @@ public class Board
 	public Board()
 	{
 		wall = new ImageIcon("../images/wall.png").getImage();
+		tnt = new ImageIcon("../images/tnt.png").getImage();
 		redFlag = new ImageIcon("../images/red_flag.png").getImage();
 		blueFlag = new ImageIcon("../images/blue_flag.png").getImage();
-		total = new char[][] {
-			{'t', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't'},
-			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o',	'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
-			{'t', 'o', 'f', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
-			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
-			{'t', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 'o', 'o', 'o', 't'},
-			{'t', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 'o', 'o', 'o', 't'},
-			{'t', 't', 't', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't'},
-			{'t', 't', 't', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't'},
-			{'t', 't', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 't', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't'},
-			{'t', 't', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 't', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't'},
-			{'t', 't', 't', 't', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't', 't', 't', 't'},
-			{'t', 't', 't', 't', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't', 't', 't', 't'},
-			{'t', 't', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 't', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 'o', 'o', 'o', 't'},
-			{'t', 't', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 't', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 'o', 'o', 'o', 't'},
-			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't', 't', 't', 't'},
-			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't', 't', 't', 't'},
-			{'t', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't'},
-			{'t', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't'},
-			{'t', 't', 't', 't', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
-			{'t', 't', 't', 't', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
-			{'t', 'o', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't'},
-			{'t', 'o', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o',	'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't'},
-			{'t', 'o', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't'},
-			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
-			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'f', 'o', 't'},
-			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
-			{'t', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't'}
-		};
+		resetBoard();
 	}
 	
 	// This method handles drawing the board during the game. It takes
@@ -82,6 +55,9 @@ public class Board
 					if (c == 't')
 						g.drawImage(wall, j * ServerConstants.FRAGMENT_SIZE + refX, i * ServerConstants.FRAGMENT_SIZE + refY, ServerConstants.FRAGMENT_SIZE,
 							ServerConstants.FRAGMENT_SIZE, null);
+					else if (c == 'T')
+						g.drawImage(tnt, j * ServerConstants.FRAGMENT_SIZE + refX, i * ServerConstants.FRAGMENT_SIZE + refY, ServerConstants.FRAGMENT_SIZE,
+							ServerConstants.FRAGMENT_SIZE, null);
 					else if (Client.gameMode == ServerConstants.CAPTURE_THE_FLAG && !Client.blueFlagTaken && c == 'f' && i + rowStart == 2)
 						g.drawImage(blueFlag, j * ServerConstants.FRAGMENT_SIZE + refX, i * ServerConstants.FRAGMENT_SIZE + refY, ServerConstants.FRAGMENT_SIZE,
 							ServerConstants.FRAGMENT_SIZE, null);
@@ -101,12 +77,12 @@ public class Board
 		if (y % ServerConstants.FRAGMENT_SIZE != ServerConstants.FRAGMENT_SIZE / 2)
 			return false;
 		else if (x % ServerConstants.FRAGMENT_SIZE == ServerConstants.FRAGMENT_SIZE / 2)
-			return total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE] == 't';
+			return ("" + total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE]).toLowerCase().equals("t");
 		else if (x % ServerConstants.FRAGMENT_SIZE < ServerConstants.FRAGMENT_SIZE / 2)
 			return ("" + total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE]
-				+ total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE - 1]).contains("t");
+				+ total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE - 1]).toLowerCase().contains("t");
 		return ("" + total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE]
-			+ total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE + 1]).contains("t");
+			+ total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE + 1]).toLowerCase().contains("t");
 	}
 
 	// This method is used to check if there is a tower barrier above
@@ -117,12 +93,12 @@ public class Board
 		if (y % ServerConstants.FRAGMENT_SIZE != ServerConstants.FRAGMENT_SIZE / 2)
 			return false;
 		if (x % ServerConstants.FRAGMENT_SIZE == ServerConstants.FRAGMENT_SIZE / 2)
-			return total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE] == 't';
+			return ("" + total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE]).toLowerCase().equals("t");
 		else if (x % ServerConstants.FRAGMENT_SIZE < ServerConstants.FRAGMENT_SIZE / 2)
 			return ("" + total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE]
-				+ total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE - 1]).contains("t");
+				+ total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE - 1]).toLowerCase().contains("t");
 		return ("" + total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE]
-			+ total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE + 1]).contains("t");
+			+ total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE + 1]).toLowerCase().contains("t");
 	}
 
 	// This method is used to check if there is a tower barrier at the
@@ -133,27 +109,60 @@ public class Board
 		if (x % ServerConstants.FRAGMENT_SIZE != ServerConstants.FRAGMENT_SIZE / 2)
 			return false;
 		if (y % ServerConstants.FRAGMENT_SIZE == ServerConstants.FRAGMENT_SIZE / 2)
-			return total[y / ServerConstants.FRAGMENT_SIZE][x / ServerConstants.FRAGMENT_SIZE - 1] == 't';
+			return ("" + total[y / ServerConstants.FRAGMENT_SIZE][x / ServerConstants.FRAGMENT_SIZE - 1]).toLowerCase().equals("t");
 		else if (y % ServerConstants.FRAGMENT_SIZE < ServerConstants.FRAGMENT_SIZE / 2)
 			return ("" + total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE - 1]
-				+ total[y / ServerConstants.FRAGMENT_SIZE][x / ServerConstants.FRAGMENT_SIZE - 1]).contains("t");
+				+ total[y / ServerConstants.FRAGMENT_SIZE][x / ServerConstants.FRAGMENT_SIZE - 1]).toLowerCase().contains("t");
 		return ("" + total[y / ServerConstants.FRAGMENT_SIZE][x / ServerConstants.FRAGMENT_SIZE - 1]	
-			+ total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE - 1]).contains("t");
+			+ total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE - 1]).toLowerCase().contains("t");
 	}
 	
 	// This method is used to check if there is a tower barrier at the
 	// right ofthe given (x, y) coordinate in the board. It is used in
-	// the Server class to handle movement logic.	
+	// the Server class to handle movement logic.
 	public boolean isRight(int x, int y)
 	{
 		if (x % ServerConstants.FRAGMENT_SIZE !=	ServerConstants.FRAGMENT_SIZE / 2)
 			return false;
 		if (y % ServerConstants.FRAGMENT_SIZE == ServerConstants.FRAGMENT_SIZE / 2)
-			return total[y / ServerConstants.FRAGMENT_SIZE][x / ServerConstants.FRAGMENT_SIZE + 1] == 't';
+			return ("" + total[y / ServerConstants.FRAGMENT_SIZE][x / ServerConstants.FRAGMENT_SIZE + 1]).toLowerCase().equals("t");
 		else if (y % ServerConstants.FRAGMENT_SIZE < ServerConstants.FRAGMENT_SIZE / 2)
 			return ("" + total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE + 1]
-				+ total[y / ServerConstants.FRAGMENT_SIZE][x / ServerConstants.FRAGMENT_SIZE + 1]).contains("t");
+				+ total[y / ServerConstants.FRAGMENT_SIZE][x / ServerConstants.FRAGMENT_SIZE + 1]).toLowerCase().contains("t");
 		return ("" + total[y / ServerConstants.FRAGMENT_SIZE][x / ServerConstants.FRAGMENT_SIZE + 1]
-			+ total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE + 1]).contains("t");
+			+ total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE + 1]).toLowerCase().contains("t");
+	}
+
+	public void resetBoard()
+	{
+		total = new char[][] {
+			{'t', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't'},
+			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o',	'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
+			{'t', 'o', 'f', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
+			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
+			{'t', 'o', 'o', 'o', 'o', 't', 't', 'T', 't', 'o', 'o', 't', 'T', 't', 't', 'o', 'o', 't', 'T', 'T', 't', 'o', 'o', 'o', 'o', 'o', 't'},
+			{'t', 'o', 'o', 'o', 'o', 't', 'T', 't', 't', 'o', 'o', 'T', 't', 'T', 't', 'o', 'o', 't', 'T', 't', 't', 'o', 'o', 'o', 'o', 'o', 't'},
+			{'t', 'T', 't', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't', 'T', 't', 't', 'o', 'o', 't', 't', 'T', 't', 'o', 'o', 't', 'T', 't', 't'},
+			{'t', 't', 't', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't', 't', 't', 'T', 'o', 'o', 't', 'T', 't', 't', 'o', 'o', 't', 't', 'T', 't'},
+			{'t', 't', 'T', 't', 't', 't', 'o', 'o', 'T', 't', 't', 'T', 't', 'o', 'o', 'o', 'o', 't', 'T', 'T', 't', 'o', 'o', 'T', 'T', 't', 't'},
+			{'t', 't', 't', 't', 't', 't', 'o', 'o', 't', 'T', 't', 't', 't', 'o', 'o', 'o', 'o', 't', 'T', 't', 't', 'o', 'o', 't', 't', 'T', 't'},
+			{'t', 'T', 't', 'T', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'T', 't', 't', 't'},
+			{'t', 't', 't', 't', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't', 'T', 't', 't'},
+			{'t', 't', 'T', 't', 't', 't', 'o', 'o', 't', 't', 't', 'T', 't', 'o', 'o', 'o', 'o', 't', 't', 'T', 'T', 'o', 'o', 'o', 'o', 'o', 't'},
+			{'t', 't', 't', 't', 'T', 't', 'o', 'o', 'T', 't', 'T', 't', 't', 'o', 'o', 'o', 'o', 'T', 'T', 't', 't', 'o', 'o', 'o', 'o', 'o', 't'},
+			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't', 'T', 't', 't'},
+			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't', 'T', 't', 't'},
+			{'t', 'T', 't', 'T', 't', 'T', 't', 't', 't', 'T', 't', 't', 'T', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 'T', 't', 't'},
+			{'t', 't', 'T', 't', 't', 't', 't', 'T', 't', 't', 't', 'T', 't', 'o', 'o', 'o', 'o', 't', 't', 'T', 't', 'o', 'o', 't', 'T', 't', 't'},
+			{'t', 't', 't', 'T', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
+			{'t', 'T', 't', 't', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
+			{'t', 'o', 'o', 'o', 'o', 'o', 't', 'T', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 'T', 'T', 't', 'o', 'o', 't', 'T', 't'},
+			{'t', 'o', 'o', 'o', 'o', 'o', 'T', 't', 'T', 'T', 'o',	'o', 't', 'T', 'T', 't', 'o', 'o', 'T', 'T', 't', 'T', 'o', 'o', 'T', 't', 't'},
+			{'t', 'o', 'o', 'o', 'o', 'o', 't', 't', 'T', 't', 'o', 'o', 't', 'T', 't', 't', 'o', 'o', 't', 't', 'T', 'T', 'o', 'o', 't', 'T', 't'},
+			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
+			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'f', 'o', 't'},
+			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
+			{'t', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't'}
+		};
 	}
 }

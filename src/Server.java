@@ -1,6 +1,6 @@
 /*
 Krish Agarwal
-5.10.19
+5.12.19
 Server.java
 */
 
@@ -30,9 +30,9 @@ public class Server implements Runnable
 	static ConcurrentHashMap<String, Player> players;
 	static ConcurrentHashMap<String, Bullet> bullets;
 	static Timer waitTimer, bulletTimer;
-	static int count, gameMode;
+	static int count, gameMode, redCount, blueCount, waveNumber, shrapnelCount;
 	static boolean gamePlaying;
-	static int redCount = 0, blueCount = 0;
+	static String playerTeam, botTeam;
 	private Socket socket;
 	private Scanner in;
 	private PrintWriter out;
@@ -48,7 +48,16 @@ public class Server implements Runnable
 	// being run.
 	public static void main(String[] args)
 	{
-		gameMode = ServerConstants.RED_VS_BLUE;
+		shrapnelCount = redCount = blueCount = 0;
+		waveNumber = 1;
+		gameMode = ServerConstants.COLLABORATIVE;
+		playerTeam = "red";
+		botTeam = "blue";
+		if (Math.random() > 0.5)
+		{
+			playerTeam = "blue";
+			botTeam = "red";
+		}
 		Thread message = new Thread(new Runnable()
 		{
 			// This is a method used to display the IP address that
@@ -84,10 +93,18 @@ public class Server implements Runnable
 				sendToAll(ServerConstants.READY_TO_PLAY + gameMode);
 				bulletTimer.start();
 				gamePlaying = true;
-				if (redCount < blueCount)
+				if (gameMode == ServerConstants.COLLABORATIVE)
+					sendToAll(ServerConstants.NEW_WAVE + waveNumber);
+				while (redCount < blueCount)
+				{
 					new Bot("red");
-				else if (blueCount < redCount)
+					redCount++;
+				}
+				while (blueCount < redCount)
+				{
 					new Bot("blue");
+					blueCount++;
+				}
 			}
 		});
 
@@ -120,15 +137,29 @@ public class Server implements Runnable
 							sendToAll(ServerConstants.REVIVE_PLAYER + nearest.name + '\0' + newPosX + '\0' + shooter);
 							nearest.revive(newPosX, shooter);
 							
-							if (gameMode == ServerConstants.RED_VS_BLUE && (allAreDead("red") || allAreDead("blue")))
+							if (gameMode == ServerConstants.COLLABORATIVE)
+							{
+								boolean playersDead = allAreDead(playerTeam);
+								boolean botsDead = allAreDead(botTeam);
+								if (playersDead || (botsDead && waveNumber == 3))
+								{
+									sendToAll(ServerConstants.WIN + shooter);
+									clearGame();
+								}
+								else if (botsDead)
+									startNewWave();
+							}
+							else if (gameMode == ServerConstants.RED_VS_BLUE && (allAreDead("red") || allAreDead("blue")))
 							{
 								sendToAll(ServerConstants.WIN + shooter);
 								clearGame();
 							}
 						}
 					}
-					else if (gameBoard.total[(int)(curr.posY / ServerConstants.FRAGMENT_SIZE)][(int)(curr.posX / ServerConstants.FRAGMENT_SIZE)] == 't')
+					else if (("" + gameBoard.total[(int)(curr.posY / ServerConstants.FRAGMENT_SIZE)][(int)(curr.posX / ServerConstants.FRAGMENT_SIZE)]).toLowerCase().equals("t"))
 						stopBullet(name);
+					if (gameBoard.total[(int)(curr.posY / ServerConstants.FRAGMENT_SIZE)][(int)(curr.posX / ServerConstants.FRAGMENT_SIZE)] == 'T')
+						blowUp((int)(curr.posY / ServerConstants.FRAGMENT_SIZE), (int)(curr.posX / ServerConstants.FRAGMENT_SIZE));
 				}
 			}
 		});
@@ -145,6 +176,31 @@ public class Server implements Runnable
 				+ ServerConstants.PORT_NUMBER);
 			System.exit(1);
 		}
+	}
+
+	public static void blowUp(int i, int j)
+	{
+		gameBoard.total[i][j] = 'o';
+		sendToAll(ServerConstants.BLOW_UP + i + '\0' + j);
+		for (int k = 0; k < 10; k++)
+		{
+			Shrapnel curr = new Shrapnel((j + 0.5) * ServerConstants.FRAGMENT_SIZE, (i + 0.5) * ServerConstants.FRAGMENT_SIZE);
+			String name = "Shrapnel" + ServerConstants.NAME_SEPERATOR;
+			sendToAll(ServerConstants.CREATE_SHRAPNEL + name + ServerConstants.NAME_SEPERATOR + shrapnelCount + '\0' + curr.toString());
+			bullets.put(name + ServerConstants.NAME_SEPERATOR + shrapnelCount, curr);
+			shrapnelCount++;
+		}
+	}
+
+	public static void startNewWave()
+	{
+		waveNumber++;
+		sendToAll(ServerConstants.NEW_WAVE + waveNumber);
+		int playerCount = blueCount;
+		if (playerTeam.equals("red"))
+			playerCount = redCount;
+		for (int i = 0; i < waveNumber * playerCount; i++)
+			new Bot(botTeam);
 	}
 
 	// This method runs during the rest of the program to continually
@@ -228,7 +284,15 @@ public class Server implements Runnable
 	public void run()
 	{
 		int rand = (int)(Math.random() * 2);
-		if (!gamePlaying && (blueCount < redCount || (blueCount == redCount && rand == 0)))
+		if (gameMode == ServerConstants.COLLABORATIVE)
+		{
+			out.println(ServerConstants.SET_TEAM + playerTeam);
+			if (playerTeam.equals("blue"))
+				blueCount++;
+			else
+				redCount++;
+		}
+		else if (!gamePlaying && (blueCount < redCount || (blueCount == redCount && rand == 0)))
 		{
 			out.println(ServerConstants.SET_TEAM + "blue");
 			blueCount++;
@@ -353,7 +417,7 @@ public class Server implements Runnable
 		Player nearest = null;
 		for (Player curr : players.values())
 		{
-			if (!curr.dead && !curr.team.equals(team) && (nearest == null || curr.getDistanceTo(x, y) < nearest.getDistanceTo(x, y)))
+			if (!curr.dead && (team.equals("none") || !curr.team.equals(team)) && (nearest == null || curr.getDistanceTo(x, y) < nearest.getDistanceTo(x, y)))
 				nearest = curr;
 		}
 		return nearest;
@@ -406,5 +470,6 @@ public class Server implements Runnable
 		clients.clear();
 		gamePlaying = false;
 		Bot.botCount = 0;
+		gameBoard.resetBoard();
 	}
 }

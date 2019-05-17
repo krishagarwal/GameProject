@@ -1,6 +1,6 @@
 /*
 Krish Agarwal
-5.10.19
+5.12.19
 ServerThread.java
 */
 
@@ -45,6 +45,14 @@ public class ServerThread implements Runnable
 						Client.send(ServerConstants.DELETE_PLAYER + Client.playerName);
 						Client.waiting = true;
 					}
+					else if (!Client.waiting && input.startsWith(ServerConstants.BLOW_UP))
+						Client.totalPanel.gameBoard.total[Integer.parseInt(input.substring(ServerConstants.BLOW_UP.length(), input.indexOf('\0')))]
+							[Integer.parseInt(input.substring(input.indexOf('\0') + 1))] = 'o';
+					else if (!Client.waiting && input.startsWith(ServerConstants.CREATE_SHRAPNEL))
+						Client.bullets.put(input.substring(ServerConstants.CREATE_SHRAPNEL.length(), input.indexOf('\0')), 
+							Shrapnel.getNewShrapnel(input.substring(input.indexOf('\0') + 1)));
+					else if (!Client.waiting && input.startsWith(ServerConstants.NEW_WAVE))
+						Client.totalPanel.displayText("Wave " + input.substring(ServerConstants.NEW_WAVE.length()));
 					else if (!Client.waiting && input.startsWith(ServerConstants.MOVE_GUN))
 						Client.players.get(input.substring(ServerConstants.MOVE_GUN.length(), input.indexOf('\0'))).gunDegree
 							= Double.parseDouble(input.substring(input.indexOf('\0') + 1));
@@ -117,6 +125,12 @@ public class ServerThread implements Runnable
 					else if (input.startsWith(ServerConstants.READY_TO_PLAY) && !input.startsWith(ServerConstants.ADD_PLAYER))
 					{
 						Client.gameMode = Integer.parseInt(input.substring(ServerConstants.READY_TO_PLAY.length()));
+						if (Client.gameMode == ServerConstants.CAPTURE_THE_FLAG)
+							Client.totalPanel.displayText("Capture the Flag");
+						else if (Client.gameMode == ServerConstants.COLLABORATIVE)
+							Client.totalPanel.displayText("Collaborative");
+						else
+							Client.totalPanel.displayText("Red vs. Blue");
 						Client.playing = true;
 						Client.totalPanel.moveLeft();
 						int posY = ServerConstants.BOARD_SIZE - ServerConstants.FRAGMENT_SIZE * 2;

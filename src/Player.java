@@ -1,6 +1,6 @@
 /*
 Krish Agarwal
-5.10.19
+5.12.19
 Player.java
 */
 
@@ -247,7 +247,6 @@ public class Player
 			g.drawImage(redFlag, posX - 10, posY - 20, 10, 20, null);
 		Graphics2D g2d = (Graphics2D)g;
 		AffineTransform old = g2d.getTransform();
-		// g2d.rotate(gunDegree, posX, posY);
 		if (Math.PI / 2 < gunDegree && gunDegree <= Math.PI * 1.5)
 		{
 			g2d.rotate(gunDegree - Math.PI, posX, posY);

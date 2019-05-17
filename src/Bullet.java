@@ -1,6 +1,6 @@
 /*
 Krish Agarwal
-5.10.19
+5.12.19
 Bullet.java
 */
 
@@ -23,7 +23,7 @@ public class Bullet
 
 	// This constructor instantiates a Bullet starting from (x, y)
 	// and adding xAdd and yAdd to update the position.
-	private Bullet(double x, double y, double xAdd, double yAdd, String team)
+	protected Bullet(double x, double y, double xAdd, double yAdd, String team)
 	{
 		addX = xAdd;
 		addY = yAdd;
@@ -100,20 +100,6 @@ public class Bullet
 		g.setColor(Color.RED);
 		if (team.equals("blue"))
 			g.setColor(Color.BLUE);
-		Graphics2D g2d = (Graphics2D)g;
-		AffineTransform old = g2d.getTransform();
-		// if (Math.PI / 2 < degree && degree <= Math.PI * 1.5)
-		// {
-		// 	g2d.rotate(degree - Math.PI, fromX, fromY);
-		// 	g2d.drawImage(bullet, posX - 15, posY - 7, 15, 10, null);
-		// }
-		// else
-		// {
-		// 	g2d.rotate(degree, fromX, fromY);
-		// 	g2d.drawImage(bullet, posX - 7, posY - 5, 15, 10, null);
-		// // }		
-		// g2d.setTransform(old);
-		
 		g.fillOval(posX - ServerConstants.BULLET_SIZE / 2, posY - ServerConstants.BULLET_SIZE / 2, ServerConstants.BULLET_SIZE, ServerConstants.BULLET_SIZE);
 	}
 }

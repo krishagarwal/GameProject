@@ -1,6 +1,6 @@
 /*
 Krish Agarwal
-5.10.19
+5.12.19
 Bot.java
 */
 
@@ -69,7 +69,9 @@ public class Bot
 				}
 				bulletCount++;
 
-				if (Math.abs(nearest.posX - player.posX) > Math.abs(nearest.posY - player.posY) && Math.abs(nearest.posX - player.posX) > 100)
+				boolean vertical = Math.abs(nearest.posY - player.posY) > 100;
+				boolean horizontal = Math.abs(nearest.posX - player.posX) > 100;
+				if ((horizontal && canMoveHorizontally()) || (!canMoveVertically() && vertical))
 				{
 					if (nearest.posX - player.posX < 0 && !Server.gameBoard.isLeft(player.posX, player.posY))
 					{
@@ -82,7 +84,7 @@ public class Bot
 						player.moveRight();
 					}
 				}
-				else if (Math.abs(nearest.posY - player.posY) > 100)
+				else if ((vertical && canMoveVertically()) || (!canMoveHorizontally() && horizontal))
 				{
 					if (nearest.posY - player.posY < 0 && !Server.gameBoard.isAbove(player.posX, player.posY))
 					{
@@ -98,5 +100,17 @@ public class Bot
 			}
 		});
 		mover.start();
+	}
+
+	public boolean canMoveVertically()
+	{
+		Player me = Server.players.get(name);
+		return Server.gameBoard != null && !Server.gameBoard.isAbove(me.posX, me.posY) && !Server.gameBoard.isBelow(me.posX, me.posY);
+	}
+
+	public boolean canMoveHorizontally()
+	{
+		Player me = Server.players.get(name);
+		return Server.gameBoard != null && !Server.gameBoard.isLeft(me.posX, me.posY) && !Server.gameBoard.isRight(me.posX, me.posY);
 	}
 }
