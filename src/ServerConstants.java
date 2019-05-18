@@ -4,8 +4,11 @@ Krish Agarwal
 ServerConstants.java
 */
 
+import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 import javax.swing.*;
 
 // This class stores a variety of constants used throughout
@@ -47,7 +50,7 @@ public final class ServerConstants
 	public static final String NEW_WAVE =	 			"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	public static final String CREATE_SHRAPNEL = 		"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	public static final String BLOW_UP = 				"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
-	public static final String SEND_MESSAGE = 			"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
+	public static final String SEND_MESSAGE = 			"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	
 	// For my reference: used as a separator, must have special
 	// character
@@ -70,6 +73,27 @@ public final class ServerConstants
 	public static final int RED_VS_BLUE = 2;
 	public static final int COLLABORATIVE = 3;
 
+
+	static
+	{
+		ip = "";
+		getLocalHost(null, "not connected");
+	}
+
+	public static void playClip(String fileName)
+	{
+		try
+		{
+			Clip audio = AudioSystem.getClip();
+			audio.open(AudioSystem.getAudioInputStream(new File(fileName)));
+			audio.start();
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
 	private static String ip = "";
 
 	// This method is used to display a message String on the

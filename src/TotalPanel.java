@@ -40,7 +40,6 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 	public TotalPanel()
 	{
 		setLayout(null);
-		ServerConstants.getLocalHost(Client.frame, "Not connected to internet");
 		showText = spectating = waitText = winningTeam = winner = "";
 		requestFocus();
 		addMouseListener(this);
@@ -281,6 +280,11 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		{
 			g.setColor(new Color(125, 125, 125, 220));
 			g.fillRect(10, 10, 200, 560);
+			g.setColor(new Color(200, 200, 200, 150));
+			g.fillRect(10, 10, 200, 40);
+			g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 20));
+			g.setColor(Color.WHITE);
+			g.drawString("Team Chat", 20, 40);
 			g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 10));
 			g.setColor(Color.WHITE);
 			displayLines(g);
@@ -393,6 +397,13 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 			else if (evt.getKeyCode() == KeyEvent.VK_BACK_SPACE && sendText.length() > 5)
 			{
 				sendText = sendText.substring(0, sendText.length() - 1);
+				repaint();
+			}
+			else if (evt.getKeyCode() == KeyEvent.VK_ENTER && sendText.length() > 5)
+			{
+				Client.send(ServerConstants.SEND_MESSAGE + Client.players.get(Client.playerName).team + '\0' + Client.playerName.substring(0, Client.playerName.indexOf(ServerConstants.NAME_SEPERATOR))
+					+ sendText.substring(3));
+				sendText = "You: ";
 			}
 		}
 	}
@@ -608,12 +619,24 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		textShower.start();
 	}
 
+	public void addNewMessage(String msg)
+	{
+		if (!Client.players.get(Client.playerName).team.equals(msg.substring(0, msg.indexOf('\0'))))
+			return;
+		messages.add(msg.substring(msg.indexOf('\0') + 1));
+		repaint();
+	}
+
 	public void displayLines(Graphics g)
 	{
 		int y = 580;
-		y = displayLine(sendText, 20, y, g, true);
+		y = displayLine(sendText, 20, y, g, true) - 5;
 		for (int i = messages.size() - 1; i >= 0; i--)
+		{
 			y = displayLine(messages.get(i), 20, y, g, false) - 5;
+			if (y < 80)
+				i = -1;
+		}
 	}
 
 	public int displayLine(String line, int x, int y, Graphics g, boolean isYou)
@@ -640,6 +663,8 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 				g.setColor(Color.WHITE);
 			}
 			g.drawString(currLine.get(currLine.size() - i), x, y - i * 15);
+			if (currY < 80)
+				i = currLine.size() + 1;
 		}
 		return currY;
 	}

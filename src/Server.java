@@ -50,7 +50,7 @@ public class Server implements Runnable
 	{
 		shrapnelCount = redCount = blueCount = 0;
 		waveNumber = 1;
-		gameMode = ServerConstants.COLLABORATIVE;
+		gameMode = ServerConstants.CAPTURE_THE_FLAG;
 		playerTeam = "red";
 		botTeam = "blue";
 		if (Math.random() > 0.5)

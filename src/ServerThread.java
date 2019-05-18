@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Scanner;
 
+import javax.sound.sampled.Clip;
+
 // This class handles receiving all the information from the Server
 // program. It runs runs separate from the GUI program so that it
 // can receive information about game play from the Server program
@@ -45,6 +47,8 @@ public class ServerThread implements Runnable
 						Client.send(ServerConstants.DELETE_PLAYER + Client.playerName);
 						Client.waiting = true;
 					}
+					else if (!Client.waiting && input.startsWith(ServerConstants.SEND_MESSAGE))
+						Client.totalPanel.addNewMessage(input.substring(ServerConstants.SEND_MESSAGE.length()));
 					else if (!Client.waiting && input.startsWith(ServerConstants.BLOW_UP))
 						Client.totalPanel.gameBoard.total[Integer.parseInt(input.substring(ServerConstants.BLOW_UP.length(), input.indexOf('\0')))]
 							[Integer.parseInt(input.substring(input.indexOf('\0') + 1))] = 'o';
@@ -111,8 +115,11 @@ public class ServerThread implements Runnable
 					else if (!Client.waiting && input.startsWith(ServerConstants.TERMINATE_BULLET))
 						Client.bullets.remove(input.substring(ServerConstants.TERMINATE_BULLET.length()));
 					else if (!Client.waiting && input.startsWith(ServerConstants.CREATE_BULLET))
+					{
+						ServerConstants.playClip("../src/gun_shot.wav");
 						Client.bullets.put(input.substring(ServerConstants.CREATE_BULLET.length(), input.indexOf('\0')), 
 							Bullet.getNewBullet(input.substring(input.indexOf('\0') + 1)));
+					}
 					else if (!Client.waiting && input.startsWith(ServerConstants.SET_TEAM))
 						Client.team = input.substring(ServerConstants.SET_TEAM.length());
 					else if (!Client.waiting && input.startsWith(ServerConstants.WAIT_BEFORE_PLAY))

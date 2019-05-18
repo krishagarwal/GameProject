@@ -124,6 +124,8 @@ public class Client
 		totalPanel.posMover.start();
 		totalPanel.gameBoard.resetBoard();
 		frame.removeWindowListener(frameListener);
+		totalPanel.messages.clear();
+		totalPanel.sendText = "";
 	}
 
 	// This method handles connecting the Client program to the
