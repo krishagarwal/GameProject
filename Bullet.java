@@ -34,8 +34,8 @@ public class Bullet
 		if (addX < 0)
 			degree += Math.PI;
 		this.team = team;
-		if (Client.totalPanel != null)
-			ServerConstants.playClip("gun_shot.wav", 1 - (Client.players.get(Client.playerName).getDistanceTo((int)posX, (int)posY)));
+		// if (Client.totalPanel != null)
+		// 	ServerConstants.playClip("gun_shot.wav", 1 - (Client.players.get(Client.playerName).getDistanceTo((int)posX, (int)posY)));
 	}
 
 	// This method returns a Bullet based on the starting coordinates

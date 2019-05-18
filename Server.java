@@ -349,6 +349,11 @@ public class Server implements Runnable
 					players.remove(input.substring(ServerConstants.DELETE_PLAYER.length()));
 					if (allAreBots())
 						clearGame();
+					else if (players.size() == 1 && gameMode != ServerConstants.CAPTURE_THE_FLAG)
+					{
+						sendToAll(ServerConstants.WIN + players.get(0).name);
+						clearGame();
+					}
 				}
 				else if (input.startsWith(ServerConstants.ADD_PLAYER))
 					players.put(input.substring(ServerConstants.ADD_PLAYER.length(), input.indexOf('\0')), 

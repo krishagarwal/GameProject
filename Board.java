@@ -74,68 +74,88 @@ public class Board
 		}
 	}
 
+	public boolean isBelow(int x, int y)
+	{
+		return isBelow(x, y, "t");
+	}
+
+	public boolean isAbove(int x, int y)
+	{
+		return isAbove(x, y, "t");
+	}
+
+	public boolean isLeft(int x, int y)
+	{
+		return isLeft(x, y, "t");
+	}
+
+	public boolean isRight(int x, int y)
+	{
+		return isRight(x, y, "t");
+	}
+
 	// This method is used to check if there is a tower barrier below
 	// the given (x, y) coordinate in the board. It is used in the
 	// Server class to handle movement logic.
-	public boolean isBelow(int x, int y)
+	public boolean isBelow(int x, int y, String s)
 	{
 		if (y % ServerConstants.FRAGMENT_SIZE != ServerConstants.FRAGMENT_SIZE / 2)
 			return false;
 		else if (x % ServerConstants.FRAGMENT_SIZE == ServerConstants.FRAGMENT_SIZE / 2)
-			return ("" + total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE]).toLowerCase().equals("t");
+			return ("" + total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE]).toLowerCase().equals(s);
 		else if (x % ServerConstants.FRAGMENT_SIZE < ServerConstants.FRAGMENT_SIZE / 2)
 			return ("" + total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE]
-				+ total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE - 1]).toLowerCase().contains("t");
+				+ total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE - 1]).toLowerCase().contains(s);
 		return ("" + total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE]
-			+ total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE + 1]).toLowerCase().contains("t");
+			+ total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE + 1]).toLowerCase().contains(s);
 	}
 
 	// This method is used to check if there is a tower barrier above
 	// the given (x, y) coordinate in the board. It is used in the
 	// Server class to handle movement logic.
-	public boolean isAbove(int x, int y)
+	public boolean isAbove(int x, int y, String s)
 	{
 		if (y % ServerConstants.FRAGMENT_SIZE != ServerConstants.FRAGMENT_SIZE / 2)
 			return false;
 		if (x % ServerConstants.FRAGMENT_SIZE == ServerConstants.FRAGMENT_SIZE / 2)
-			return ("" + total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE]).toLowerCase().equals("t");
+			return ("" + total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE]).toLowerCase().equals(s);
 		else if (x % ServerConstants.FRAGMENT_SIZE < ServerConstants.FRAGMENT_SIZE / 2)
 			return ("" + total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE]
-				+ total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE - 1]).toLowerCase().contains("t");
+				+ total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE - 1]).toLowerCase().contains(s);
 		return ("" + total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE]
-			+ total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE + 1]).toLowerCase().contains("t");
+			+ total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE + 1]).toLowerCase().contains(s);
 	}
 
 	// This method is used to check if there is a tower barrier at the
 	// left ofthe given (x, y) coordinate in the board. It is used in
 	// the Server class to handle movement logic.
-	public boolean isLeft(int x, int y)
+	public boolean isLeft(int x, int y, String s)
 	{
 		if (x % ServerConstants.FRAGMENT_SIZE != ServerConstants.FRAGMENT_SIZE / 2)
 			return false;
 		if (y % ServerConstants.FRAGMENT_SIZE == ServerConstants.FRAGMENT_SIZE / 2)
-			return ("" + total[y / ServerConstants.FRAGMENT_SIZE][x / ServerConstants.FRAGMENT_SIZE - 1]).toLowerCase().equals("t");
+			return ("" + total[y / ServerConstants.FRAGMENT_SIZE][x / ServerConstants.FRAGMENT_SIZE - 1]).toLowerCase().equals(s);
 		else if (y % ServerConstants.FRAGMENT_SIZE < ServerConstants.FRAGMENT_SIZE / 2)
 			return ("" + total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE - 1]
-				+ total[y / ServerConstants.FRAGMENT_SIZE][x / ServerConstants.FRAGMENT_SIZE - 1]).toLowerCase().contains("t");
+				+ total[y / ServerConstants.FRAGMENT_SIZE][x / ServerConstants.FRAGMENT_SIZE - 1]).toLowerCase().contains(s);
 		return ("" + total[y / ServerConstants.FRAGMENT_SIZE][x / ServerConstants.FRAGMENT_SIZE - 1]	
-			+ total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE - 1]).toLowerCase().contains("t");
+			+ total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE - 1]).toLowerCase().contains(s);
 	}
 	
 	// This method is used to check if there is a tower barrier at the
 	// right ofthe given (x, y) coordinate in the board. It is used in
 	// the Server class to handle movement logic.
-	public boolean isRight(int x, int y)
+	public boolean isRight(int x, int y, String s)
 	{
-		if (x % ServerConstants.FRAGMENT_SIZE !=	ServerConstants.FRAGMENT_SIZE / 2)
+		if (x % ServerConstants.FRAGMENT_SIZE != ServerConstants.FRAGMENT_SIZE / 2)
 			return false;
 		if (y % ServerConstants.FRAGMENT_SIZE == ServerConstants.FRAGMENT_SIZE / 2)
-			return ("" + total[y / ServerConstants.FRAGMENT_SIZE][x / ServerConstants.FRAGMENT_SIZE + 1]).toLowerCase().equals("t");
+			return ("" + total[y / ServerConstants.FRAGMENT_SIZE][x / ServerConstants.FRAGMENT_SIZE + 1]).toLowerCase().equals(s);
 		else if (y % ServerConstants.FRAGMENT_SIZE < ServerConstants.FRAGMENT_SIZE / 2)
 			return ("" + total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE + 1]
-				+ total[y / ServerConstants.FRAGMENT_SIZE][x / ServerConstants.FRAGMENT_SIZE + 1]).toLowerCase().contains("t");
+				+ total[y / ServerConstants.FRAGMENT_SIZE][x / ServerConstants.FRAGMENT_SIZE + 1]).toLowerCase().contains(s);
 		return ("" + total[y / ServerConstants.FRAGMENT_SIZE][x / ServerConstants.FRAGMENT_SIZE + 1]
-			+ total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE + 1]).toLowerCase().contains("t");
+			+ total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE + 1]).toLowerCase().contains(s);
 	}
 
 	// This method resets the board by resetting the whole character array

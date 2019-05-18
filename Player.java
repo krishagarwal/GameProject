@@ -181,9 +181,15 @@ public class Player
 	// the player has the opposing team's flag.
 	public boolean hasFlag()
 	{
-		return Server.gameBoard != null && ((posY / ServerConstants.FRAGMENT_SIZE == 2 && team.equals("red"))
-			|| (posY / ServerConstants.FRAGMENT_SIZE == Server.gameBoard.total.length - 3 && team.equals("blue")))
-			&& Server.gameBoard.total[posX / ServerConstants.FRAGMENT_SIZE][posY / ServerConstants.FRAGMENT_SIZE] == 'f';
+		return Server.gameBoard != null && ((posY / ServerConstants.FRAGMENT_SIZE <= 3 && team.equals("red")) ||
+			(posY / ServerConstants.FRAGMENT_SIZE >= Server.gameBoard.total.length - 4 && team.equals("blue"))) &&
+			(Server.gameBoard.isAbove(posX, posY + ServerConstants.MOVE_LENGTH, "f") ||
+			Server.gameBoard.isBelow(posX, posY - ServerConstants.MOVE_LENGTH, "f") ||
+			Server.gameBoard.isLeft(posX + ServerConstants.MOVE_LENGTH, posY, "f") ||
+			Server.gameBoard.isRight(posX - ServerConstants.MOVE_LENGTH, posY, "f"));
+		// return Server.gameBoard != null && ((posY / ServerConstants.FRAGMENT_SIZE == 2 && team.equals("red"))
+		// 	|| (posY / ServerConstants.FRAGMENT_SIZE == Server.gameBoard.total.length - 3 && team.equals("blue")))
+		// 	&& Server.gameBoard.total[posX / ServerConstants.FRAGMENT_SIZE][posY / ServerConstants.FRAGMENT_SIZE] == 'f';
 	}
 
 	// Whenever the player moves, this method is called to check if
