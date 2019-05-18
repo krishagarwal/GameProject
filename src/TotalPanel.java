@@ -6,8 +6,15 @@ TotalPanel.java
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Area;
+import java.awt.geom.FlatteningPathIterator;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
+
+import javax.imageio.ImageIO;
 import javax.swing.*;
 
 // This class is the JPanel class used to display all of the game.
@@ -18,12 +25,13 @@ import javax.swing.*;
 public class TotalPanel extends JPanel implements MouseListener, MouseMotionListener, KeyListener
 {
 	public static int viewX, viewY, origX, origY, posX, posY, movePosX, movePosY, showCount;
-	String waitText, winningTeam, winner, spectating, showText;
+	String waitText, winningTeam, winner, spectating, showText, deathLog, sendText;
 	public Board gameBoard;
 	Timer screenMoverLeft, screenMoverRight, screenMoverDown, screenMoverUp, moverUp, moverDown, moverLeft, moverRight, posMover, textShower;
-	boolean loading, showWinner, won, showEnter;
+	boolean loading, showWinner, won, showEnter, showHoverPlay;
+	ArrayList<String> messages;
 	private Color red, blue;
-	Image heart;
+	Image heart, play, playHover;
 
 	// This constructor initializes the JPanel. The layout is set to
 	// null because all components are drawn in paintComponent(). It
@@ -32,6 +40,7 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 	public TotalPanel()
 	{
 		setLayout(null);
+		ServerConstants.getLocalHost(Client.frame, "Not connected to internet");
 		showText = spectating = waitText = winningTeam = winner = "";
 		requestFocus();
 		addMouseListener(this);
@@ -41,10 +50,13 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		origX = viewX = ServerConstants.FRAME_SIZE;
 		origY = viewY = 2 * ServerConstants.FRAME_SIZE;
 		gameBoard = new Board();
-		loading = won = false;
+		showHoverPlay = loading = won = false;
 		showEnter = true;
 		heart = new ImageIcon("../images/heart.png").getImage();
 
+
+		// This method shows some text at the top of the game panel
+		// for only about 1 second and then stops displaying the text
 		textShower = new Timer(1000, (e) ->
 		{
 			showCount++;
@@ -114,6 +126,11 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 
 		red = new Color(245, 0, 0);
 		blue = new Color(0, 140, 245);
+		play = new ImageIcon("../images/play.png").getImage();
+		playHover = new ImageIcon("../images/play_hover.png").getImage();
+
+		sendText = "You: ";
+		messages = new ArrayList<String>();
 	}
 
 	// This method is used to draw the components on the screen. It
@@ -253,14 +270,23 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		}
 		g.setFont(new Font("Sans Serif", Font.PLAIN, 20));
 		if (showSpectating)
-		{
+		{	
 			g.setColor(Color.BLACK);
 			String display = "Spectating \"" + spectating.substring(0, spectating.indexOf(ServerConstants.NAME_SEPERATOR)) + "\"";
 			g.drawString(display, (int)(300 - g.getFontMetrics().getStringBounds(display, g).getWidth() / 2), 100);
 		}
 		g.setColor(Color.WHITE);
 		g.drawString(showText, (int)(300 - g.getFontMetrics().getStringBounds(showText, g).getWidth() / 2), 50);
-		
+		if (!showWinner)
+		{
+			g.setColor(new Color(125, 125, 125, 220));
+			g.fillRect(10, 10, 200, 560);
+			g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 10));
+			g.setColor(Color.WHITE);
+			displayLines(g);
+			g.setFont(new Font("Sans Serif", Font.PLAIN, 20));
+		}
+
 		// For my reference: NamePanel
 		g.setColor(Color.BLACK);
 		String displayName = Client.playerName;
@@ -280,10 +306,9 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		int playWidth = (int)(g.getFontMetrics().getStringBounds("play", g).getWidth());
 		g.setColor(Color.BLACK);
 		g.fillRect(ServerConstants.FRAME_SIZE - viewX, ServerConstants.FRAME_SIZE - viewY, 600, 600);
-		g.setColor(Color.DARK_GRAY);
-		g.fillRect(260 + ServerConstants.FRAME_SIZE - viewX, 270 + ServerConstants.FRAME_SIZE - viewY, 80, 60);
-		g.setColor(Color.WHITE);
-		g.drawString("play", 300 - playWidth / 2 + ServerConstants.FRAME_SIZE - viewX, 310 + ServerConstants.FRAME_SIZE - viewY);
+		if (showHoverPlay)
+			g.drawImage(playHover, 250 + ServerConstants.FRAME_SIZE - viewX, 285 + ServerConstants.FRAME_SIZE - viewY, 100, 50, null);
+		g.drawImage(play, 250 + ServerConstants.FRAME_SIZE - viewX, 275 + ServerConstants.FRAME_SIZE - viewY, 100, 50, null);
 
 		// For my reference: ServerInputPanel
 		g.setColor(Color.BLACK);
@@ -365,6 +390,10 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 				moverLeft.start();
 			else if (e == KeyEvent.VK_RIGHT)
 				moverRight.start();
+			else if (evt.getKeyCode() == KeyEvent.VK_BACK_SPACE && sendText.length() > 5)
+			{
+				sendText = sendText.substring(0, sendText.length() - 1);
+			}
 		}
 	}
 	
@@ -404,6 +433,11 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 			Client.ip += evt.getKeyChar();
 			repaint();
 		}
+		else if (viewX == ServerConstants.FRAME_SIZE && viewY == 0)
+		{
+			sendText += evt.getKeyChar();
+			repaint();
+		}
 	}
 
 	// This method is part of the MouseListener. Whenever the mouse is
@@ -412,7 +446,7 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 	public void mousePressed(MouseEvent e)
 	{
 		requestFocus();
-		if (viewX == ServerConstants.FRAME_SIZE && viewY == ServerConstants.FRAME_SIZE && e.getX() >= 260 && e.getX() <= 340 && e.getY() >= 270 && e.getY() <= 330)
+		if (viewX == ServerConstants.FRAME_SIZE && viewY == ServerConstants.FRAME_SIZE && e.getX() >= 250 && e.getX() <= 350 && e.getY() >= 275 && e.getY() <= 325)
 			moveRight();
 		else if (viewX == ServerConstants.FRAME_SIZE && viewY == 0)
 		{
@@ -447,14 +481,25 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 
 	public void mouseMoved(MouseEvent e)
 	{
-		Player me = Client.players.get(Client.playerName);
-		if (me == null)
-			return;
-		int y = e.getY() - ServerConstants.FRAME_SIZE / 2, x = e.getX() - ServerConstants.FRAME_SIZE / 2;
-		double deg = Math.atan((double)y / x);
-		if (x < 0)
-			deg += Math.PI;
-		Client.send(ServerConstants.MOVE_GUN + Client.playerName + '\0' + deg);
+		if (viewX == ServerConstants.FRAME_SIZE && viewY == 0)
+		{
+			Player me = Client.players.get(Client.playerName);
+			if (me == null)
+				return;
+			int y = e.getY() - ServerConstants.FRAME_SIZE / 2, x = e.getX() - ServerConstants.FRAME_SIZE / 2;
+			double deg = Math.atan((double)y / x);
+			if (x < 0)
+				deg += Math.PI;
+			Client.send(ServerConstants.MOVE_GUN + Client.playerName + '\0' + deg);
+		}
+		else if (viewX == ServerConstants.FRAME_SIZE && viewY == ServerConstants.FRAME_SIZE)
+		{
+			if (e.getX() >= 250 && e.getX() <= 350 && e.getY() >= 275 && e.getY() <= 325)
+				showHoverPlay = true;
+			else
+				showHoverPlay = false;
+			repaint();
+		}
 	}
 
 	// This method is used to set the text of the wait "panel"
@@ -554,10 +599,48 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		});
 	}
 
+	// This takes a text input and shows the given text at the top of the game
+	// panel for a few seconds by starting a timer.
 	public void displayText(String text)
 	{
 		textShower.stop();
 		showText = text;
 		textShower.start();
+	}
+
+	public void displayLines(Graphics g)
+	{
+		int y = 580;
+		y = displayLine(sendText, 20, y, g, true);
+		for (int i = messages.size() - 1; i >= 0; i--)
+			y = displayLine(messages.get(i), 20, y, g, false) - 5;
+	}
+
+	public int displayLine(String line, int x, int y, Graphics g, boolean isYou)
+	{
+		ArrayList<String> currLine = new ArrayList<String>();
+		while(line.length() >= 30)
+		{
+			int index = line.lastIndexOf(' ', 30);
+			if (index < 0)
+				index = 30;
+			currLine.add(line.substring(0, index + 1));
+			line = line.substring(index + 1);
+		}
+		currLine.add(line);
+
+		int currY = y;
+		for (int i = 1; i <= currLine.size(); i++)
+		{
+			currY -= 15;
+			if (isYou)
+			{
+				g.setColor(new Color(200, 200, 200, 150));
+				g.fillRect(10, y - i * 15 - 12, 200, 17);
+				g.setColor(Color.WHITE);
+			}
+			g.drawString(currLine.get(currLine.size() - i), x, y - i * 15);
+		}
+		return currY;
 	}
 }

@@ -133,6 +133,8 @@ public class Board
 			+ total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE + 1]).toLowerCase().contains("t");
 	}
 
+	// This method resets the board by resetting the whole character array
+	// that deterines the layout of the board.
 	public void resetBoard()
 	{
 		total = new char[][] {

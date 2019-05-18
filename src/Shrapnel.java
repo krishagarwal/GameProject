@@ -1,18 +1,25 @@
 /*
 Krish Agarwal
 5.12.19
-Bullet.java
+Shrapnel.java
 */
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 
+// This class is used to store information on each shrapnel fired
+// during when a TNT box is blown up during game play. It behaves like
+// a Bullet object but it more random and is also drawn differently.
 public class Shrapnel extends Bullet
 {
 	double turnAngle, currAngle;
 	Image shrapnel;
 
+	// This constructor instantiates a new Shrapnel object given the
+	// point of origin (a TNT box), by randomly deciding the angle at
+	// which to travel and with the angle the amount to add to the x
+	// and y coordinates to move.
 	public Shrapnel(double originX, double originY)
 	{
 		super(originX, originY, 0, 0, "none");
@@ -23,11 +30,17 @@ public class Shrapnel extends Bullet
 		shrapnel = new ImageIcon("../images/shrapnel.png").getImage();
 	}
 
+	// This method returns a String representing this Shrapnel object
+	// so that the Server can send this String and this String can
+	// be parsed with the Client program using the getNewShrapnel method.
 	public String toString()
 	{
 		return "" + posX + '\0' + posY + '\0' + addX + '\0' + addY;
 	}
 
+	// This method takes a String input and parses it into a new Shrapnel
+	// object. The input String is determined by the toString() method and
+	// is used at the Client level for information received from the Server.
 	public static Shrapnel getNewShrapnel(String input)
 	{
 		double fromX = Double.parseDouble(input.substring(0, input.indexOf('\0')));
@@ -43,6 +56,9 @@ public class Shrapnel extends Bullet
 		return ret;
 	}
 
+	// This method draws the Shrapnel to the game panel by drawing the 
+	// shrapnel image and also rotating it to give the shrapnel the appearance
+	// of rotation.
 	public void draw(Graphics g, int refX, int refY)
 	{
 		currAngle += turnAngle;
@@ -51,9 +67,7 @@ public class Shrapnel extends Bullet
 		Graphics2D g2d = (Graphics2D)g;
 		AffineTransform old = g2d.getTransform();
 		g2d.rotate(currAngle, posX, posY);
-		// g.setColor(Color.BLACK);
 		g2d.drawImage(shrapnel, posX - ServerConstants.BULLET_SIZE / 2, posY - ServerConstants.BULLET_SIZE / 2, ServerConstants.BULLET_SIZE, ServerConstants.BULLET_SIZE, null);
-		// g.fillOval(posX - ServerConstants.BULLET_SIZE / 2, posY - ServerConstants.BULLET_SIZE / 2, ServerConstants.BULLET_SIZE, ServerConstants.BULLET_SIZE);
 		g2d.setTransform(old);
 	}
 }

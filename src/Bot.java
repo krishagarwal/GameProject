@@ -102,12 +102,18 @@ public class Bot
 		mover.start();
 	}
 
+	// This method determines whether or not the bot can move
+	// vertically based on whether or not there is a wall in the way
+	// based on the Server's game board.
 	public boolean canMoveVertically()
 	{
 		Player me = Server.players.get(name);
 		return Server.gameBoard != null && !Server.gameBoard.isAbove(me.posX, me.posY) && !Server.gameBoard.isBelow(me.posX, me.posY);
 	}
 
+	// This method determines whether or not the bot can move
+	// horizontally based on whether or not there is a wall in the way
+	// based on the Server's game board.
 	public boolean canMoveHorizontally()
 	{
 		Player me = Server.players.get(name);

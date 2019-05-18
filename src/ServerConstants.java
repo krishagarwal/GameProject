@@ -15,8 +15,9 @@ import javax.swing.*;
 // sections of constants, which are numerical sequences
 // used to identify the intent of messages sent between Server
 // and Client programs. The third section of constants is used
-// as a separator in each message, and the last section of
-// constants is used for numerical constants. All the String
+// as a separator in some messages, the fourth section of
+// constants is used for numerical constants, and the last section
+// of constants is used as codes for the game modes. All the String
 // constants use ASCII codes for unprintable characters so that
 // they are not confused by input Strings, such as the name.
 public final class ServerConstants
@@ -46,6 +47,7 @@ public final class ServerConstants
 	public static final String NEW_WAVE =	 			"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	public static final String CREATE_SHRAPNEL = 		"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	public static final String BLOW_UP = 				"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
+	public static final String SEND_MESSAGE = 			"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	
 	// For my reference: used as a separator, must have special
 	// character
@@ -63,10 +65,12 @@ public final class ServerConstants
 	public static final int HEALTH_DECREASE = 5;
 	public static final int MOVE_LENGTH = 5;
 
-	// For my regerence: game modes
+	// For my reference: game modes
 	public static final int CAPTURE_THE_FLAG = 1;
 	public static final int RED_VS_BLUE = 2;
 	public static final int COLLABORATIVE = 3;
+
+	private static String ip = "";
 
 	// This method is used to display a message String on the
 	// screen using a JOptionPane. This method is used in the Server
@@ -81,7 +85,8 @@ public final class ServerConstants
 	// when displaying the IP address.
 	public static String getLocalHost(JFrame parent, String error)
 	{
-		String ip = "";
+		if (!ip.equals(""))
+			return ip;
 		try
 		{
 			ip = InetAddress.getLocalHost().toString();

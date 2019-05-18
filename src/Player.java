@@ -7,7 +7,6 @@ Player.java
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.AffineTransform;
-
 import javax.swing.*;
 
 // This class is used to store information about each player
