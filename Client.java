@@ -30,7 +30,7 @@ public class Client
 	static PrintWriter out;
 	static TotalPanel totalPanel;
 	static JFrame frame;
-	static boolean waiting, playing, blueFlagTaken, redFlagTaken;
+	static boolean waiting, playing, blueFlagTaken, redFlagTaken, startedConnection;
 	static int bulletCount = 0, gameMode = 0;
 	static WindowListener frameListener;
 
@@ -39,7 +39,7 @@ public class Client
 	// a new JFrame, and displaying the JPanel on the JFrame
 	public Client()
 	{
-		redFlagTaken = blueFlagTaken = waiting = playing = false;
+		startedConnection = redFlagTaken = blueFlagTaken = waiting = playing = false;
 		players = new ConcurrentHashMap<String, Player>();
 		bullets = new ConcurrentHashMap<String, Bullet>();
 		playerName = ip = team = "";
@@ -49,6 +49,7 @@ public class Client
 		frame.setSize(ServerConstants.FRAME_SIZE, ServerConstants.FRAME_SIZE);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setContentPane(totalPanel);
+		frame.setResizable(false);
 		frame.setVisible(true);
 
 		frameListener = new WindowListener()
@@ -124,23 +125,25 @@ public class Client
 			TotalPanel.movePosX = Math.abs(ServerConstants.BOARD_SIZE / 2 - TotalPanel.posX) / (ServerConstants.BOARD_SIZE / 2 - TotalPanel.posX) * 5;
 			TotalPanel.movePosY = Math.abs(ServerConstants.BOARD_SIZE / 2 - TotalPanel.posY) / (ServerConstants.BOARD_SIZE / 2 - TotalPanel.posY) * 5;
 			totalPanel.posMover.start();
-			totalPanel.gameBoard.resetBoard();
 			frame.removeWindowListener(frameListener);
 		}
 		totalPanel.messages.clear();
+		totalPanel.deathLog.clear();
 		totalPanel.sendText = "You: ";
+		startedConnection = false;
 	}
 
 	// This method handles connecting the Client program to the
 	// Server program by assuming that the static "ip" variable
 	// has been preset by any program attempting to connect.
-	public static void connect()
+	public static boolean connect()
 	{
+		startedConnection = true;
 		Client.socket = null;
 		try
 		{
 			if (ip.equals(""))
-				ip += ServerConstants.getLocalHost(frame, "You do not seem to be connected to the internet. Reconnect and try again.");
+				ip += ServerConstants.getLocalHost(frame, "You do not seem to be connected to the internet.\nReconnect and try again.");
 			socket = new Socket(ip, ServerConstants.PORT_NUMBER);
 			Thread.sleep(1000);
 			Thread server = new Thread(new ServerThread());
@@ -148,14 +151,17 @@ public class Client
 		}
 		catch (IOException ioe)
 		{
-			System.err.println("Fatal connection error");
-			ioe.printStackTrace();
+			ServerConstants.showErrorMessage(frame, "Error", "Unreachable IP address.\nEnter a different IP.");
+			startedConnection = false;
+			return false;
 		}
 		catch (InterruptedException ie)
 		{
-			System.err.println("Fatal connection error");
-			ie.printStackTrace();
+			ServerConstants.showErrorMessage(frame, "Error", "Unreachable IP address.\nEnter a different IP.");
+			startedConnection = false;
+			return false;
 		}
 		frame.addWindowListener(frameListener);
+		return true;
 	}
 }

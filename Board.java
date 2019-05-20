@@ -12,7 +12,7 @@ import javax.swing.*;
 public class Board
 {
 	char[][] total;
-	Image wall, tnt, redFlag, blueFlag, bush;
+	Image wall, tnt, redFlag, blueFlag, bush, heart;
 	
 	// This constructor is used to instantiate a new Board object. A
 	// 2D character array is stored to define the layour of the board.
@@ -27,6 +27,7 @@ public class Board
 		redFlag = new ImageIcon("red_flag.png").getImage();
 		blueFlag = new ImageIcon("blue_flag.png").getImage();
 		bush = new ImageIcon("bush.png").getImage();
+		heart = new ImageIcon("heart_board.png").getImage();
 		resetBoard();
 	}
 	
@@ -57,7 +58,10 @@ public class Board
 						&& j + colStart <= ServerConstants.BOARD_FRAGMENTS - 2)
 						g.setColor(new Color(255, 195, 195));
 					g.fillRect(j * ServerConstants.FRAGMENT_SIZE + refX, i * ServerConstants.FRAGMENT_SIZE + refY, ServerConstants.FRAGMENT_SIZE, ServerConstants.FRAGMENT_SIZE);
-					if (c == 't')
+					if (c == 'h' && Client.gameMode != ServerConstants.CAPTURE_THE_FLAG)
+						g.drawImage(heart, j * ServerConstants.FRAGMENT_SIZE + refX, i * ServerConstants.FRAGMENT_SIZE + refY, ServerConstants.FRAGMENT_SIZE,
+							ServerConstants.FRAGMENT_SIZE, null);
+					else if (c == 't')
 						g.drawImage(wall, j * ServerConstants.FRAGMENT_SIZE + refX, i * ServerConstants.FRAGMENT_SIZE + refY, ServerConstants.FRAGMENT_SIZE,
 							ServerConstants.FRAGMENT_SIZE, null);
 					else if (c == 'T')
@@ -92,6 +96,78 @@ public class Board
 	public boolean isRight(int x, int y)
 	{
 		return isRight(x, y, "t");
+	}
+
+		// This method is used to check if there is a tower barrier below
+	// the given (x, y) coordinate in the board. It is used in the
+	// Server class to handle movement logic.
+	public int[] whereBelow(int x, int y, String s)
+	{
+		if (x % ServerConstants.FRAGMENT_SIZE == ServerConstants.FRAGMENT_SIZE / 2)
+			return new int[] {y / ServerConstants.FRAGMENT_SIZE + 1, x / ServerConstants.FRAGMENT_SIZE};
+		else if (x % ServerConstants.FRAGMENT_SIZE < ServerConstants.FRAGMENT_SIZE / 2)
+		{
+			if (("" + total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE]).toLowerCase().equals(s))
+				return new int[] {y / ServerConstants.FRAGMENT_SIZE + 1, x / ServerConstants.FRAGMENT_SIZE};
+			return new int[] {y / ServerConstants.FRAGMENT_SIZE + 1, x / ServerConstants.FRAGMENT_SIZE - 1};
+		}
+		if (("" + total[y / ServerConstants.FRAGMENT_SIZE + 1][x / ServerConstants.FRAGMENT_SIZE]).toLowerCase().equals(s))
+			return new int[] {y / ServerConstants.FRAGMENT_SIZE + 1, x / ServerConstants.FRAGMENT_SIZE};
+		return new int[] {y / ServerConstants.FRAGMENT_SIZE + 1, x / ServerConstants.FRAGMENT_SIZE + 1};
+	}
+
+	// This method is used to check if there is a tower barrier above
+	// the given (x, y) coordinate in the board. It is used in the
+	// Server class to handle movement logic.
+	public int[] whereAbove(int x, int y, String s)
+	{
+		if (x % ServerConstants.FRAGMENT_SIZE == ServerConstants.FRAGMENT_SIZE / 2)
+			return new int[] {y / ServerConstants.FRAGMENT_SIZE - 1, x / ServerConstants.FRAGMENT_SIZE};
+		else if (x % ServerConstants.FRAGMENT_SIZE < ServerConstants.FRAGMENT_SIZE / 2)
+		{
+			if (("" + total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE]).toLowerCase().equals(s))
+				return new int[] {y / ServerConstants.FRAGMENT_SIZE - 1, x / ServerConstants.FRAGMENT_SIZE};
+			return new int[] {y / ServerConstants.FRAGMENT_SIZE - 1, x / ServerConstants.FRAGMENT_SIZE - 1};
+		}
+		if (("" + total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE]).toLowerCase().equals(s))
+			return new int[] {y / ServerConstants.FRAGMENT_SIZE - 1, x / ServerConstants.FRAGMENT_SIZE};
+		return new int[] {y / ServerConstants.FRAGMENT_SIZE - 1, x / ServerConstants.FRAGMENT_SIZE + 1};
+	}
+
+	// This method is used to check if there is a tower barrier at the
+	// left ofthe given (x, y) coordinate in the board. It is used in
+	// the Server class to handle movement logic.
+	public int[] whereLeft(int x, int y, String s)
+	{
+		if (y % ServerConstants.FRAGMENT_SIZE == ServerConstants.FRAGMENT_SIZE / 2)
+			return new int[] {y / ServerConstants.FRAGMENT_SIZE, x / ServerConstants.FRAGMENT_SIZE - 1};
+		else if (y % ServerConstants.FRAGMENT_SIZE < ServerConstants.FRAGMENT_SIZE / 2)
+		{
+			if (("" + total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE - 1]).toLowerCase().equals(s))
+				return new int[] {y / ServerConstants.FRAGMENT_SIZE - 1, x / ServerConstants.FRAGMENT_SIZE - 1};
+			return new int[] {y / ServerConstants.FRAGMENT_SIZE, x / ServerConstants.FRAGMENT_SIZE - 1};
+		}
+		if (("" + total[y / ServerConstants.FRAGMENT_SIZE][x / ServerConstants.FRAGMENT_SIZE - 1]).toLowerCase().equals(s))
+			return new int[] {y / ServerConstants.FRAGMENT_SIZE, x / ServerConstants.FRAGMENT_SIZE - 1};
+		return new int [] {y / ServerConstants.FRAGMENT_SIZE + 1, x / ServerConstants.FRAGMENT_SIZE - 1};
+	}
+	
+	// This method is used to check if there is a tower barrier at the
+	// right ofthe given (x, y) coordinate in the board. It is used in
+	// the Server class to handle movement logic.
+	public int[] whereRight(int x, int y, String s)
+	{
+		if (y % ServerConstants.FRAGMENT_SIZE == ServerConstants.FRAGMENT_SIZE / 2)
+			return new int[] {y / ServerConstants.FRAGMENT_SIZE, x / ServerConstants.FRAGMENT_SIZE + 1};
+		else if (y % ServerConstants.FRAGMENT_SIZE < ServerConstants.FRAGMENT_SIZE / 2)
+		{
+			if (("" + total[y / ServerConstants.FRAGMENT_SIZE - 1][x / ServerConstants.FRAGMENT_SIZE + 1]).toLowerCase().equals(s))
+				return new int[] {y / ServerConstants.FRAGMENT_SIZE - 1, x / ServerConstants.FRAGMENT_SIZE + 1};
+			return new int[] {y / ServerConstants.FRAGMENT_SIZE, x / ServerConstants.FRAGMENT_SIZE + 1};
+		}
+		if (("" + total[y / ServerConstants.FRAGMENT_SIZE][x / ServerConstants.FRAGMENT_SIZE + 1]).toLowerCase().equals(s))
+			return new int[] {y / ServerConstants.FRAGMENT_SIZE, x / ServerConstants.FRAGMENT_SIZE + 1};
+		return new int[] {y / ServerConstants.FRAGMENT_SIZE + 1, x / ServerConstants.FRAGMENT_SIZE + 1};
 	}
 
 	// This method is used to check if there is a tower barrier below
@@ -167,29 +243,63 @@ public class Board
 			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o',	'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
 			{'t', 'o', 'f', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
 			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
-			{'t', 'o', 'o', 'o', 'o', 't', 't', 'T', 't', 'o', 'o', 't', 'T', 't', 't', 'o', 'o', 't', 'T', 'T', 't', 'o', 'o', 'o', 'o', 'o', 't'},
-			{'t', 'o', 'o', 'o', 'o', 't', 'T', 't', 't', 'o', 'o', 'T', 't', 'T', 't', 'o', 'o', 't', 'T', 't', 't', 'o', 'o', 'o', 'o', 'o', 't'},
-			{'t', 'T', 't', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't', 'T', 't', 't', 'o', 'o', 't', 't', 'T', 't', 'o', 'o', 't', 'T', 't', 't'},
-			{'t', 't', 't', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't', 't', 't', 'T', 'o', 'o', 't', 'T', 't', 't', 'o', 'o', 't', 't', 'T', 't'},
-			{'t', 't', 'T', 't', 't', 't', 'o', 'o', 'T', 't', 't', 'T', 't', 'o', 'o', 'o', 'o', 't', 'T', 'T', 't', 'o', 'o', 'T', 'T', 't', 't'},
-			{'t', 't', 't', 't', 't', 't', 'o', 'o', 't', 'T', 't', 't', 't', 'o', 'o', 'o', 'o', 't', 'T', 't', 't', 'o', 'o', 't', 't', 'T', 't'},
-			{'t', 'T', 't', 'T', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'T', 't', 't', 't'},
-			{'t', 't', 't', 't', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't', 'T', 't', 't'},
-			{'t', 't', 'T', 't', 't', 't', 'o', 'o', 't', 't', 't', 'T', 't', 'o', 'o', 'o', 'o', 't', 't', 'T', 'T', 'o', 'o', 'o', 'o', 'o', 't'},
-			{'t', 't', 't', 't', 'T', 't', 'o', 'o', 'T', 't', 'T', 't', 't', 'o', 'o', 'o', 'o', 'T', 'T', 't', 't', 'o', 'o', 'o', 'o', 'o', 't'},
-			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't', 'T', 't', 't'},
-			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't', 'T', 't', 't'},
-			{'t', 'T', 't', 'T', 't', 'T', 't', 't', 't', 'T', 't', 't', 'T', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 'T', 't', 't'},
-			{'t', 't', 'T', 't', 't', 't', 't', 'T', 't', 't', 't', 'T', 't', 'o', 'o', 'o', 'o', 't', 't', 'T', 't', 'o', 'o', 't', 'T', 't', 't'},
-			{'t', 't', 't', 'T', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
-			{'t', 'T', 't', 't', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
-			{'t', 'o', 'o', 'o', 'o', 'o', 't', 'T', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 'T', 'T', 't', 'o', 'o', 't', 'T', 't'},
-			{'t', 'o', 'o', 'o', 'o', 'o', 'T', 't', 'T', 'T', 'o',	'o', 't', 'T', 'T', 't', 'o', 'o', 'T', 'T', 't', 'T', 'o', 'o', 'T', 't', 't'},
-			{'t', 'o', 'o', 'o', 'o', 'o', 't', 't', 'T', 't', 'o', 'o', 't', 'T', 't', 't', 'o', 'o', 't', 't', 'T', 'T', 'o', 'o', 't', 'T', 't'},
+			{'t', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 'o', 'o', 'o', 't'},
+			{'t', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 'o', 'o', 'o', 't'},
+			{'t', 't', 't', 'o', 'o', 'o', 'h', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't'},
+			{'t', 't', 't', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't'},
+			{'t', 't', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 't', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't'},
+			{'t', 't', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 't', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't'},
+			{'t', 't', 't', 't', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't', 't', 't', 't'},
+			{'t', 't', 't', 't', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't', 't', 't', 't'},
+			{'t', 't', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 't', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 'o', 'o', 'o', 't'},
+			{'t', 't', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 't', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 'o', 'o', 'o', 't'},
+			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't', 't', 't', 't'},
+			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't', 't', 't', 't'},
+			{'t', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't'},
+			{'t', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't'},
+			{'t', 't', 't', 't', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
+			{'t', 't', 't', 't', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
+			{'t', 'o', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't'},
+			{'t', 'o', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o',	'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't'},
+			{'t', 'o', 'o', 'o', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't', 't', 'o', 'o', 't', 't', 't'},
 			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
 			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'f', 'o', 't'},
 			{'t', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 't'},
 			{'t', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't', 't'}
 		};
+	}
+
+	public void scrambleBoard()
+	{
+		for (int i = 1; i < total.length - 1; i++)
+		{
+			for (int j = 1; j < total[i].length - 1; j++)
+			{
+				if (total[i][j] == 't' && Math.random() >= 0.85)
+					total[i][j] = 'T';
+				else if (total[i][j] == 'o' && Math.random() >= 0.98 && i > 3 && i < total.length - 4)
+					total[i][j] = 'h';
+			}
+		}
+	}
+
+	public void setBoard(String input)
+	{
+		for (int i = 0; i < total.length; i++)
+		{
+			for (int j = 0; j < total[i].length; j++)
+				total[i][j] = input.charAt(i * total[i].length + j);
+		}
+	}
+
+	public String toString()
+	{
+		String ret = "";
+		for (int i = 0; i < total.length; i++)
+		{
+			for (int j = 0; j < total[i].length; j++)
+				ret += total[i][j];
+		}
+		return ret;
 	}
 }

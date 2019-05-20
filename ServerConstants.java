@@ -52,6 +52,7 @@ public final class ServerConstants
 	public static final String CREATE_SHRAPNEL = 		"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	public static final String BLOW_UP = 				"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	public static final String SEND_MESSAGE = 			"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
+	public static final String ADD_LIFE = 				"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	
 	// For my reference: used as a separator, must have special
 	// character
@@ -74,6 +75,8 @@ public final class ServerConstants
 	public static final int RED_VS_BLUE = 2;
 	public static final int COLLABORATIVE = 3;
 
+	public static final char RED = '\3';
+	public static final char BLUE = '\4';
 
 	static
 	{
@@ -131,5 +134,17 @@ public final class ServerConstants
 	public static void showErrorMessage(JFrame parent, String title, String content)
 	{
 		JOptionPane.showMessageDialog(parent, content, title, JOptionPane.ERROR_MESSAGE);
+	}
+
+	public static String regulateName(String in)
+	{
+		return regulateName(in, 10);
+	}
+
+	public static String regulateName(String in, int amt)
+	{
+		if (in.length() > amt)
+			in = in.substring(0, amt - 3) + "...";
+		return in;
 	}
 }

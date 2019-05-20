@@ -49,6 +49,8 @@ public class ServerThread implements Runnable
 							Client.send(ServerConstants.DELETE_PLAYER + Client.playerName);
 							Client.waiting = true;
 						}
+						else if (!Client.waiting && input.startsWith(ServerConstants.ADD_LIFE))
+							Client.players.get(input.substring(ServerConstants.ADD_LIFE.length())).livesLeft++;
 						else if (!Client.waiting && input.startsWith(ServerConstants.SEND_MESSAGE))
 							Client.totalPanel.addNewMessage(input.substring(ServerConstants.SEND_MESSAGE.length()));
 						else if (!Client.waiting && input.startsWith(ServerConstants.BLOW_UP))
@@ -81,7 +83,7 @@ public class ServerThread implements Runnable
 								Client.totalPanel.winningTeam = Client.players.get(name).team;
 								if (Client.totalPanel.winningTeam.equals(Client.players.get(Client.playerName).team))
 									Client.totalPanel.won = true;
-								Client.totalPanel.winner = name.substring(0, name.indexOf(ServerConstants.NAME_SEPERATOR));
+								Client.totalPanel.winner = ServerConstants.regulateName(name.substring(0, name.indexOf(ServerConstants.NAME_SEPERATOR)));
 							}
 							Client.clearGame();
 							if (Client.waiting)
@@ -95,6 +97,11 @@ public class ServerThread implements Runnable
 							String killed = input.substring(ServerConstants.REVIVE_PLAYER.length(), input.indexOf('\0'));
 							String killer = input.substring(input.lastIndexOf('\0') + 1);
 							Client.players.get(killed).revive(Integer.parseInt(input.substring(input.indexOf('\0') + 1, input.lastIndexOf('\0'))), killer);
+							char start = ServerConstants.BLUE;
+							if (Client.players.get(killer).team.equals("red"))
+								start = ServerConstants.RED;
+							Client.totalPanel.deathLog.add(start + ServerConstants.regulateName(killer.substring(0, killer.indexOf(ServerConstants.NAME_SEPERATOR)), 6)
+								+ '\0' + ServerConstants.regulateName(killed.substring(0, killed.indexOf(ServerConstants.NAME_SEPERATOR)), 6));
 							System.out.println("\"" + killer.substring(0, killer.indexOf(ServerConstants.NAME_SEPERATOR))
 								+ "\" killed \"" + killed.substring(0, killed.indexOf(ServerConstants.NAME_SEPERATOR)) + "\"");
 						}
@@ -130,13 +137,8 @@ public class ServerThread implements Runnable
 								Player.getNewPlayer(input.substring(ServerConstants.ADD_PLAYER.length())));
 						else if (input.startsWith(ServerConstants.READY_TO_PLAY) && !input.startsWith(ServerConstants.ADD_PLAYER))
 						{
-							Client.gameMode = Integer.parseInt(input.substring(ServerConstants.READY_TO_PLAY.length()));
-							if (Client.gameMode == ServerConstants.CAPTURE_THE_FLAG)
-								Client.totalPanel.displayText("Capture the Flag");
-							else if (Client.gameMode == ServerConstants.COLLABORATIVE)
-								Client.totalPanel.displayText("Collaborative");
-							else
-								Client.totalPanel.displayText("Red vs. Blue");
+							Client.gameMode = Integer.parseInt(input.substring(ServerConstants.READY_TO_PLAY.length(), input.lastIndexOf('\0')));
+							Client.totalPanel.gameBoard.setBoard(input.substring(input.indexOf('\0') + 1));
 							Client.playing = true;
 							Client.totalPanel.moveLeft();
 							int posY = ServerConstants.BOARD_SIZE - ServerConstants.FRAGMENT_SIZE * 2;

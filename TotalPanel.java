@@ -13,7 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
-
+import java.util.concurrent.CopyOnWriteArrayList;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
@@ -24,14 +24,14 @@ import javax.swing.*;
 // instead of a sudden change using CardLayout.
 public class TotalPanel extends JPanel implements MouseListener, MouseMotionListener, KeyListener
 {
-	public static int viewX, viewY, origX, origY, posX, posY, movePosX, movePosY, showCount;
-	String waitText, winningTeam, winner, spectating, showText, deathLog, sendText;
+	public static int chatX, viewX, viewY, origX, origY, posX, posY, movePosX, movePosY, showCount;
+	String waitText, winningTeam, winner, spectating, showText, sendText;
 	public Board gameBoard;
-	Timer screenMoverLeft, screenMoverRight, screenMoverDown, screenMoverUp, moverUp, moverDown, moverLeft, moverRight, posMover, textShower;
-	boolean loading, showWinner, won, showEnter, showHoverPlay;
-	ArrayList<String> messages;
+	Timer screenMoverLeft, screenMoverRight, screenMoverDown, screenMoverUp, moverUp, moverDown, moverLeft, moverRight, posMover, textShower, chatMoverLeft, chatMoverRight;
+	boolean loading, showWinner, won, showEnter, showHoverPlay, hasEnteredName, showHoverMainMenu;
+	CopyOnWriteArrayList<String> messages, deathLog;
 	private Color red, blue;
-	Image heart, play, playHover;
+	Image heart, play, playHover, rvb, ctf, collab, leftArr, rightArr, mainMenu, mainMenuHover;
 
 	// This constructor initializes the JPanel. The layout is set to
 	// null because all components are drawn in paintComponent(). It
@@ -49,11 +49,15 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		origX = viewX = ServerConstants.FRAME_SIZE;
 		origY = viewY = 2 * ServerConstants.FRAME_SIZE;
 		gameBoard = new Board();
-		showHoverPlay = loading = won = false;
+		showHoverMainMenu = hasEnteredName = showHoverPlay = loading = won = false;
 		showEnter = true;
 		heart = new ImageIcon("heart.png").getImage();
-
-
+		rvb = new ImageIcon("red_vs_blue.png").getImage();
+		ctf = new ImageIcon("capture_the_flag.png").getImage();
+		collab = new ImageIcon("collaborative.png").getImage();
+		leftArr = new ImageIcon("left_arrow.png").getImage();
+		rightArr = new ImageIcon("right_arrow.png").getImage();
+		
 		// This method shows some text at the top of the game panel
 		// for only about 1 second and then stops displaying the text
 		textShower = new Timer(1000, (e) ->
@@ -66,6 +70,26 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 				textShower.stop();
 			}
 			repaint();
+		});
+
+		chatMoverLeft = new Timer(30, new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				chatX -= 10;
+				if (chatX == -170)
+					chatMoverLeft.stop();
+			}
+		});
+
+		chatMoverRight = new Timer(30, new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				chatX += 10;
+				if (chatX == 10)
+					chatMoverRight.stop();
+			}
 		});
 		
 		// This method is used to send information to the Server
@@ -127,9 +151,13 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		blue = new Color(0, 140, 245);
 		play = new ImageIcon("play.png").getImage();
 		playHover = new ImageIcon("play_hover.png").getImage();
+		mainMenu = new ImageIcon("main_menu.png").getImage();
+		mainMenuHover = new ImageIcon("main_menu_hover.png").getImage();
 
+		chatX = 10;
 		sendText = "You: ";
-		messages = new ArrayList<String>();
+		messages = new CopyOnWriteArrayList<String>();
+		deathLog = new CopyOnWriteArrayList<String>();
 	}
 
 	// This method is used to draw the components on the screen. It
@@ -141,7 +169,7 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		super.paintComponent(g);
 
 		// For my reference: GamePanel
-		g.setFont(new Font("Sans Serif", Font.PLAIN, 12));
+		g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
 		Player me = Client.players.get(Client.playerName), spectatingPlayer = Client.players.get(spectating);
 		boolean drawHearts = false, showSpectating = false;
 		if (me != null && !me.dead)
@@ -165,6 +193,22 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 			(posY - ServerConstants.FRAME_SIZE / 2) / ServerConstants.FRAGMENT_SIZE + 16, 
 			(posX - ServerConstants.FRAME_SIZE / 2) / ServerConstants.FRAGMENT_SIZE - 1, 
 			(posX - ServerConstants.FRAME_SIZE / 2) / ServerConstants.FRAGMENT_SIZE + 16, refX, refY);
+
+		g.setColor(new Color(125, 125, 125, 100));
+		if (posMover.isRunning());
+		else if (Client.gameMode == ServerConstants.CAPTURE_THE_FLAG)
+		{
+			g.fillRoundRect(225, 5, 190, 50, 15, 15);
+			g.drawImage(ctf, 230, 10, 180, 40, null);
+		}
+		else
+			g.fillRoundRect(235, 5, 170, 50, 15, 15);
+		
+		if (posMover.isRunning());
+		else if (Client.gameMode == ServerConstants.RED_VS_BLUE)
+			g.drawImage(rvb, 240, 10, 160, 40, null);
+		else if (Client.gameMode == ServerConstants.COLLABORATIVE)
+			g.drawImage(collab, 240, 10, 160, 40, null);
 		for (Player curr : Client.players.values())
 		{
 			if (!curr.dead)
@@ -174,11 +218,11 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 			bullet.draw(g, posX + ServerConstants.FRAME_SIZE - viewX, posY - viewY);		
 		if (showWinner && Client.gameMode == ServerConstants.CAPTURE_THE_FLAG)
 		{
-			g.setFont(new Font("Sans Serif", Font.PLAIN, 40));
+			g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 25));
 			g.setColor(new Color(125, 125, 125, 220));
 			g.fillRect(10 + ServerConstants.FRAME_SIZE - viewX, 10 - viewY, 580, 560);
-			g.setColor(Color.DARK_GRAY);
-			g.fillRect(185 + ServerConstants.FRAME_SIZE - viewX, 300 - viewY, 230, 60);
+			// g.setColor(Color.DARK_GRAY);
+			// g.fillRect(185 + ServerConstants.FRAME_SIZE - viewX, 300 - viewY, 230, 60);
 			String topText = "your team won!";
 			Color winStatus = blue;
 			if (won == false)
@@ -212,15 +256,18 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 			g.setColor(Color.WHITE);
 			g.drawString(" flag.", 300 - secondWidth / 2 + (int)(g.getFontMetrics().getStringBounds("\"" + winner + "\"" + " got the " + losingTeam, g).getWidth())
 				+ ServerConstants.FRAME_SIZE - viewX, 200 - viewY);
-			g.setFont(new Font("Sans Serif", Font.PLAIN, 20));
-			g.drawString("return to main menu", (int)(300 - g.getFontMetrics().getStringBounds("return to main menu", g).getWidth() / 2)
-				+ ServerConstants.FRAME_SIZE - viewX, 340 - viewY);
+			g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 15));
+			if (showHoverMainMenu)
+				g.drawImage(mainMenuHover, 185, 310, 230, 60, null);
+			g.drawImage(mainMenu, 185 + ServerConstants.FRAME_SIZE - viewX, 300 - viewY, 230, 60, null);
+			// g.drawString("return to main menu", (int)(300 - g.getFontMetrics().getStringBounds("return to main menu", g).getWidth() / 2)
+			// 	+ ServerConstants.FRAME_SIZE - viewX, 340 - viewY);
 		}
 		else if (showWinner)
 		{
-			g.setFont(new Font("Sans Serif", Font.PLAIN, 40));
+			g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 25));
 			g.setColor(new Color(125, 125, 125, 220));
-			g.fillRect(10 + ServerConstants.FRAME_SIZE - viewX, 10 - viewY, 580, 560);
+			g.fillRoundRect(10 + ServerConstants.FRAME_SIZE - viewX, 10 - viewY, 580, 560, 15, 15);
 			g.setColor(Color.DARK_GRAY);
 			g.fillRect(185 + ServerConstants.FRAME_SIZE - viewX, 300 - viewY, 230, 60);
 			String topText = "your team won!";
@@ -254,11 +301,11 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 			g.drawString(losingTeam, 300 - secondWidth / 2
 				+ (int)(g.getFontMetrics().getStringBounds("\"" + winner + "\"" + " killed the last ", g).getWidth()) + ServerConstants.FRAME_SIZE - viewX, 200 - viewY);
 			g.setColor(Color.WHITE);
-			g.setFont(new Font("Sans Serif", Font.PLAIN, 20));
+			g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 15));
 			g.drawString("return to main menu", (int)(300 - g.getFontMetrics().getStringBounds("return to main menu", g).getWidth() / 2)
 				+ ServerConstants.FRAME_SIZE - viewX, 340 - viewY);
 		}
-		else if (drawHearts && Client.gameMode != ServerConstants.CAPTURE_THE_FLAG)
+		else if (!posMover.isRunning() && drawHearts && Client.gameMode != ServerConstants.CAPTURE_THE_FLAG)
 		{
 			if (me.livesLeft >= 1)
 				g.drawImage(heart, 540 + ServerConstants.FRAME_SIZE - viewX, 10 - viewY, 50, 50, null);
@@ -267,28 +314,45 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 			if (me.livesLeft >= 3)
 				g.drawImage(heart, 420 + ServerConstants.FRAME_SIZE - viewX, 10 - viewY, 50, 50, null);
 		}
-		g.setFont(new Font("Sans Serif", Font.PLAIN, 20));
-		if (showSpectating)
+		g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 15));
+		g.setColor(new Color(125, 125, 125, 100));
+		if (!posMover.isRunning() && showSpectating)
 		{	
-			g.setColor(Color.BLACK);
-			String display = "Spectating \"" + spectating.substring(0, spectating.indexOf(ServerConstants.NAME_SEPERATOR)) + "\"";
-			g.drawString(display, (int)(300 - g.getFontMetrics().getStringBounds(display, g).getWidth() / 2), 100);
+			String display = "Spectating \"" + ServerConstants.regulateName(spectating.substring(0, spectating.indexOf(ServerConstants.NAME_SEPERATOR))) + "\"";
+			int displayWidth = (int)(g.getFontMetrics().getStringBounds(display, g).getWidth());
+			g.fillRoundRect(590 - displayWidth - 20, 10, displayWidth + 20, 25, 15, 15);
+			g.setColor(Color.WHITE);
+			g.drawString(display, 580 - displayWidth, 30);
+			g.setColor(new Color(125, 125, 125, 100));
 		}
-		g.setColor(Color.WHITE);
-		g.drawString(showText, (int)(300 - g.getFontMetrics().getStringBounds(showText, g).getWidth() / 2), 50);
-		if (!showWinner)
+		if (!posMover.isRunning() && !showText.equals(""))
+		{
+			int showWidth = (int)(g.getFontMetrics().getStringBounds(showText, g).getWidth());
+			g.fillRoundRect(300 - showWidth / 2 - 10, 545, showWidth + 20, 25, 15, 15);
+			g.setColor(Color.WHITE);
+			g.drawString(showText, 300 - showWidth / 2, 565);
+		}
+		if (!showWinner && !posMover.isRunning())
 		{
 			g.setColor(new Color(125, 125, 125, 220));
-			g.fillRect(10, 10, 210, 560);
+			g.fillRoundRect(chatX, 10, 210, 560, 15, 15);
+			if (chatX == -170 || chatMoverRight.isRunning())
+				g.drawImage(rightArr, chatX + 180, 20, 20, 20, null);
+			else
+				g.drawImage(leftArr, chatX + 180, 20, 20, 20, null);
+			g.fillRoundRect(423, 445, 167, 125, 15, 15);
 			g.setColor(new Color(200, 200, 200, 150));
-			g.fillRect(10, 10, 210, 40);
-			g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 20));
+			g.fillRoundRect(chatX, 10, 210, 40, 15, 15);
+			g.fillRoundRect(423, 445, 167, 40, 15, 15);
+			g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 15));
 			g.setColor(Color.WHITE);
-			g.drawString("Team Chat", 20, 40);
+			g.drawString("Team Chat", chatX + 10, 40);
+			g.drawString("Recent Deaths", 433, 475);
 			g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 10));
 			g.setColor(Color.WHITE);
-			displayLines(g);
-			g.setFont(new Font("Sans Serif", Font.PLAIN, 20));
+			displayMessages(g);
+			displayDeaths(g);
+			g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 15));
 		}
 
 		// For my reference: NamePanel
@@ -299,7 +363,7 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		int nameWidth = (int)(g.getFontMetrics().getStringBounds(displayName, g).getWidth());
 		g.fillRect(ServerConstants.FRAME_SIZE - viewX, ServerConstants.FRAME_SIZE * 2 - viewY, 600, 600);
 		g.setColor(Color.DARK_GRAY);
-		g.fillRect(300 - nameWidth / 2 - 10 + ServerConstants.FRAME_SIZE - viewX, 275 + ServerConstants.FRAME_SIZE * 2 - viewY, nameWidth + 20, 50);
+		g.fillRoundRect(300 - nameWidth / 2 - 10 + ServerConstants.FRAME_SIZE - viewX, 275 + ServerConstants.FRAME_SIZE * 2 - viewY, nameWidth + 20, 50, 15, 15);
 		g.setColor(Color.WHITE);
 		g.drawString("enter your name:",
 			(int)(300 - g.getFontMetrics().getStringBounds("enter your name:", g).getWidth() / 2)
@@ -319,7 +383,7 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		int ipWidth = (int)(g.getFontMetrics().getStringBounds(Client.ip, g).getWidth());
 		g.fillRect(ServerConstants.FRAME_SIZE * 2 - viewX, ServerConstants.FRAME_SIZE - viewY, 600, 600);
 		g.setColor(Color.DARK_GRAY);
-		g.fillRect(290 - ipWidth / 2 + ServerConstants.FRAME_SIZE * 2 - viewX, 275 + ServerConstants.FRAME_SIZE - viewY, ipWidth + 20, 50);
+		g.fillRoundRect(290 - ipWidth / 2 + ServerConstants.FRAME_SIZE * 2 - viewX, 275 + ServerConstants.FRAME_SIZE - viewY, ipWidth + 20, 50, 15, 15);
 		g.setColor(Color.WHITE);
 		g.drawString("enter the ip of the server (continue if on the same machine):",
 			(int)(300 - g.getFontMetrics().getStringBounds("enter the ip of the server (continue if on the same machine):", g).getWidth() / 2)
@@ -339,7 +403,7 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		if (((viewX == ServerConstants.FRAME_SIZE && viewY == ServerConstants.FRAME_SIZE * 2)
 			|| (viewX == ServerConstants.FRAME_SIZE * 2 && viewY == ServerConstants.FRAME_SIZE)) && showEnter)
 		{
-			g.setFont(new Font("Sans Serif", Font.ITALIC, 15));
+			g.setFont(new Font(Font.MONOSPACED, Font.ITALIC, 10));
 			g.drawString("[press enter to continue]", ServerConstants.FRAME_SIZE - 30
 				- (int)(g.getFontMetrics().getStringBounds("[press enter to continue]", g).getWidth()), 400);
 		}
@@ -352,11 +416,9 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 	{
 		if (viewX == ServerConstants.FRAME_SIZE && viewY == ServerConstants.FRAME_SIZE * 2)
 		{
-			if (evt.getKeyCode() == KeyEvent.VK_ENTER)
+			if (evt.getKeyCode() == KeyEvent.VK_ENTER && !hasEnteredName)
 			{
-				showEnter = false;
-				repaint();
-				showEnter = true;
+				hasEnteredName = true;
 				Client.playerName += ServerConstants.NAME_SEPERATOR +
 					ServerConstants.getLocalHost(Client.frame, "not connected to internet") + System.currentTimeMillis();
 				repaint();
@@ -370,13 +432,8 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		}
 		else if (viewX == ServerConstants.FRAME_SIZE * 2 && viewY == ServerConstants.FRAME_SIZE)
 		{
-			if (evt.getKeyCode() == KeyEvent.VK_ENTER)
-			{
-				showEnter = false;
-				repaint();
-				Client.connect();
+			if (evt.getKeyCode() == KeyEvent.VK_ENTER && !Client.startedConnection && Client.connect())
 				moveUp();
-			}
 			else if (evt.getKeyCode() == KeyEvent.VK_BACK_SPACE && Client.ip.length() > 0)
 			{
 				Client.ip = Client.ip.substring(0, Client.ip.length() - 1);
@@ -399,10 +456,10 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 				sendText = sendText.substring(0, sendText.length() - 1);
 				repaint();
 			}
-			else if (evt.getKeyCode() == KeyEvent.VK_ENTER && sendText.length() > 5)
+			else if (chatX == 10 && evt.getKeyCode() == KeyEvent.VK_ENTER && sendText.length() > 5)
 			{
-				Client.send(ServerConstants.SEND_MESSAGE + Client.players.get(Client.playerName).team + '\0' + Client.playerName.substring(0, Client.playerName.indexOf(ServerConstants.NAME_SEPERATOR))
-					+ sendText.substring(3));
+				Client.send(ServerConstants.SEND_MESSAGE + Client.players.get(Client.playerName).team + '\0'
+					+ ServerConstants.regulateName(Client.playerName.substring(0, Client.playerName.indexOf(ServerConstants.NAME_SEPERATOR))) + sendText.substring(3));
 				sendText = "You: ";
 			}
 		}
@@ -434,7 +491,7 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 	{
 		if (evt.getKeyChar() == '\n' || evt.getKeyChar() == '\b')
 			return;
-		if (viewX == ServerConstants.FRAME_SIZE && viewY == ServerConstants.FRAME_SIZE * 2)
+		if (viewX == ServerConstants.FRAME_SIZE && viewY == ServerConstants.FRAME_SIZE * 2 && Client.playerName.length() < 40)
 		{
 			Client.playerName += evt.getKeyChar();
 			repaint();
@@ -444,7 +501,7 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 			Client.ip += evt.getKeyChar();
 			repaint();
 		}
-		else if (viewX == ServerConstants.FRAME_SIZE && viewY == 0)
+		else if (viewX == ServerConstants.FRAME_SIZE && viewY == 0 && chatX == 10)
 		{
 			sendText += evt.getKeyChar();
 			repaint();
@@ -461,7 +518,15 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 			moveRight();
 		else if (viewX == ServerConstants.FRAME_SIZE && viewY == 0)
 		{
-			if (Client.playing)
+			if (showWinner && e.getX() >= 185 && e.getX() <= 415 && e.getY() >= 300 && e.getY() <= 360)
+				moveDown();
+			else if (!Client.playing)
+				return;
+			if (chatX == 10 && e.getX() >= 190 && e.getX() <= 210 && e.getY() >= 20 && e.getY() <= 40)
+				chatMoverLeft.start();
+			else if (chatX == -170 && e.getX() >= 10 && e.getX() <= 30 && e.getY() >= 20 && e.getY() <= 40)
+				chatMoverRight.start();
+			else
 			{
 				Player player = Client.players.get(Client.playerName);
 				if (player == null || player.dead)
@@ -471,8 +536,6 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 						e.getY() - ServerConstants.FRAME_SIZE / 2 + player.posY, player.team));
 				Client.bulletCount++;
 			}
-			else if (showWinner && e.getX() >= 185 && e.getX() <= 415 && e.getY() >= 300 && e.getY() <= 360)
-				moveDown();
 		}
 	}
 	
@@ -494,6 +557,15 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 	{
 		if (viewX == ServerConstants.FRAME_SIZE && viewY == 0)
 		{
+			if (showWinner)
+			{
+				if (e.getX() >= 185 && e.getX() <= 415 && e.getY() >= 300 && e.getY() <= 360)
+					showHoverMainMenu = true;
+				else
+					showHoverMainMenu = false;
+				repaint();
+				return;
+			}
 			Player me = Client.players.get(Client.playerName);
 			if (me == null)
 				return;
@@ -525,6 +597,7 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 	// to switch between "panels" smoothly.
 	public void moveRight()
 	{
+		showHoverPlay = false;
 		if (allScreenMoversStopped())
 			screenMoverRight.start();
 	}
@@ -541,6 +614,7 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 	// to switch between "panels" smoothly.
 	public void moveDown()
 	{
+		showHoverMainMenu = false;
 		if (allScreenMoversStopped())
 			screenMoverDown.start();
 	}
@@ -602,6 +676,12 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 					posX = posY = ServerConstants.BOARD_SIZE / 2;
 					movePosX = movePosY = 0;
 					winner = winningTeam = "";
+					if (viewX == ServerConstants.FRAME_SIZE && viewY == ServerConstants.FRAME_SIZE)
+					{
+						gameBoard.resetBoard();
+						messages.clear();
+						deathLog.clear();
+					}
 					Client.blueFlagTaken = Client.redFlagTaken = showWinner = won = false;
 					origX = viewX;
 					origY = viewY;
@@ -627,19 +707,19 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		repaint();
 	}
 
-	public void displayLines(Graphics g)
+	public void displayMessages(Graphics g)
 	{
 		int y = 580;
-		y = displayLine(sendText, 20, y, g, true) - 5;
+		y = displayMessage(sendText, chatX + 10, y, g, true) - 5;
 		for (int i = messages.size() - 1; i >= 0; i--)
 		{
-			y = displayLine(messages.get(i), 20, y, g, false) - 5;
-			if (y < 80)
+			y = displayMessage(messages.get(i), chatX + 10, y, g, false) - 5;
+			if (y < 85)
 				i = -1;
 		}
 	}
 
-	public int displayLine(String line, int x, int y, Graphics g, boolean isYou)
+	public int displayMessage(String line, int x, int y, Graphics g, boolean isYou)
 	{
 		ArrayList<String> currLine = new ArrayList<String>();
 		while(line.length() > 30)
@@ -659,13 +739,42 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 			if (isYou)
 			{
 				g.setColor(new Color(200, 200, 200, 150));
-				g.fillRect(10, y - i * 15 - 12, 210, 17);
+				g.fillRoundRect(chatX, y - i * 15 - 12, 210, 17, 15, 15);
 				g.setColor(Color.WHITE);
 			}
 			g.drawString(currLine.get(currLine.size() - i), x, y - i * 15);
-			if (currY < 80)
+			if (currY < 85)
 				i = currLine.size() + 1;
 		}
 		return currY;
+	}
+
+	public void displayDeaths(Graphics g)
+	{
+		int y = 560;
+		for (int i = deathLog.size() - 1; i >= deathLog.size() - 5 && i >= 0; i--)
+			y = displayDeath(g, 580, y, deathLog.get(i));
+	}
+
+	public int displayDeath(Graphics g, int x, int y, String death)
+	{
+		Color first = blue, second = red;
+		if (death.charAt(0) == ServerConstants.RED)
+		{
+			first = red;
+			second = blue;
+		}
+		String killer = "\"" + death.substring(1, death.indexOf('\0')) + "\"", killed = "\"" + death.substring(death.indexOf('\0') + 1) + "\"";
+		int startX = x - (int)(g.getFontMetrics().getStringBounds(killer + " killed " + killed, g).getWidth());
+		int killerLength = (int)(g.getFontMetrics().getStringBounds(killer, g).getWidth()), sepLength = (int)(g.getFontMetrics().getStringBounds(" killed ", g).getWidth());
+		g.setColor(new Color(first.getRed(), first.getGreen(), first.getBlue(), 80));
+		g.fillRoundRect(startX, y - 10, killerLength, 10, 15, 15);
+		g.setColor(new Color(second.getRed(), second.getGreen(), second.getBlue(), 80));
+		g.fillRoundRect(startX + killerLength + sepLength, y - 10, (int)(g.getFontMetrics().getStringBounds(killed, g).getWidth()), 10, 15, 15);
+		g.setColor(Color.WHITE);
+		g.drawString(killer, startX, y);
+		g.drawString(" killed ", startX + killerLength, y);
+		g.drawString(killed, startX + killerLength + sepLength, y);
+		return y - 15;
 	}
 }

@@ -30,7 +30,7 @@ public class Server implements Runnable
 	static ConcurrentHashMap<String, Player> players;
 	static ConcurrentHashMap<String, Bullet> bullets;
 	static Timer waitTimer, bulletTimer;
-	static int count, gameMode, redCount, blueCount, waveNumber, shrapnelCount;
+	static int count, gameMode, redCount, blueCount, waveNumber, shrapnelCount, defaultGameMode;
 	static boolean gamePlaying;
 	static String playerTeam, botTeam;
 	private Socket socket;
@@ -48,9 +48,14 @@ public class Server implements Runnable
 	// being run.
 	public static void main(String[] args)
 	{
+		Object[] options = {"Capture the Flag", "Red vs. Blue", "Collaborative", "Random"};
+		defaultGameMode = JOptionPane.showOptionDialog(null, "Choose the game mode for this server.", "Game Mode",
+			JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, null) + 1;
+		if (defaultGameMode == JOptionPane.CLOSED_OPTION)
+			defaultGameMode = 4;
 		shrapnelCount = redCount = blueCount = 0;
 		waveNumber = 1;
-		gameMode = ServerConstants.CAPTURE_THE_FLAG;
+		setGameMode();
 		playerTeam = "red";
 		botTeam = "blue";
 		if (Math.random() > 0.5)
@@ -77,6 +82,7 @@ public class Server implements Runnable
 		players = new ConcurrentHashMap<String, Player>();
 		bullets = new ConcurrentHashMap<String, Bullet>();
 		gameBoard = new Board();
+		gameBoard.scrambleBoard();
 		waitTimer = new Timer(1000, new ActionListener()
 		{
 			// This method is used to count down until the 
@@ -90,7 +96,7 @@ public class Server implements Runnable
 				if (count >= 0)
 					return;
 				waitTimer.stop();
-				sendToAll(ServerConstants.READY_TO_PLAY + gameMode);
+				sendToAll(ServerConstants.READY_TO_PLAY + gameMode + '\0' + gameBoard.toString());
 				bulletTimer.start();
 				gamePlaying = true;
 				if (gameMode == ServerConstants.COLLABORATIVE)
@@ -122,6 +128,10 @@ public class Server implements Runnable
 					curr.update();
 					sendToAll(ServerConstants.UPDATE_BULLET + name);
 					Player nearest = getNearestOpponent((int)(curr.posX), (int)(curr.posY), curr.team);
+					if (("" + gameBoard.total[(int)(curr.posY / ServerConstants.FRAGMENT_SIZE)][(int)(curr.posX / ServerConstants.FRAGMENT_SIZE)]).toLowerCase().equals("t"))
+						stopBullet(name);
+					if (gameBoard.total[(int)(curr.posY / ServerConstants.FRAGMENT_SIZE)][(int)(curr.posX / ServerConstants.FRAGMENT_SIZE)] == 'T')
+						blowUp((int)(curr.posY / ServerConstants.FRAGMENT_SIZE), (int)(curr.posX / ServerConstants.FRAGMENT_SIZE));
 					if (nearest == null)
 						return;
 					if (nearest.getDistanceTo((int)(curr.posX), (int)(curr.posY)) < ServerConstants.FRAGMENT_SIZE / 2)
@@ -156,10 +166,6 @@ public class Server implements Runnable
 							}
 						}
 					}
-					else if (("" + gameBoard.total[(int)(curr.posY / ServerConstants.FRAGMENT_SIZE)][(int)(curr.posX / ServerConstants.FRAGMENT_SIZE)]).toLowerCase().equals("t"))
-						stopBullet(name);
-					if (gameBoard.total[(int)(curr.posY / ServerConstants.FRAGMENT_SIZE)][(int)(curr.posX / ServerConstants.FRAGMENT_SIZE)] == 'T')
-						blowUp((int)(curr.posY / ServerConstants.FRAGMENT_SIZE), (int)(curr.posX / ServerConstants.FRAGMENT_SIZE));
 				}
 			}
 		});
@@ -317,6 +323,7 @@ public class Server implements Runnable
 						gameStatus = curr.moveUp();
 					else
 						sendInfo = false;
+					checkHearts(curr);
 				}
 				else if (input.startsWith(ServerConstants.MOVE_PLAYER_DOWN))
 				{
@@ -325,6 +332,7 @@ public class Server implements Runnable
 						gameStatus = curr.moveDown();
 					else
 						sendInfo = false;
+					checkHearts(curr);
 				}
 				else if (input.startsWith(ServerConstants.MOVE_PLAYER_LEFT))
 				{
@@ -333,6 +341,7 @@ public class Server implements Runnable
 						gameStatus = curr.moveLeft();
 					else
 						sendInfo = false;
+					checkHearts(curr);
 				}
 				else if (input.startsWith(ServerConstants.MOVE_PLAYER_RIGHT))
 				{
@@ -341,6 +350,7 @@ public class Server implements Runnable
 						gameStatus = curr.moveRight();
 					else
 						sendInfo = false;
+					checkHearts(curr);
 				}
 				else if (input.startsWith(ServerConstants.CREATE_BULLET))
 					addBulletLog(input);
@@ -351,8 +361,23 @@ public class Server implements Runnable
 						clearGame();
 					else if (players.size() == 1 && gameMode != ServerConstants.CAPTURE_THE_FLAG)
 					{
-						sendToAll(ServerConstants.WIN + players.get(0).name);
+						for (Player only : players.values())
+							sendToAll(ServerConstants.WIN + only.name);
 						clearGame();
+					}
+					try
+					{
+						socket.close();
+					}
+					catch(IOException e)
+					{
+						e.printStackTrace();
+					}
+					clients.remove(this);
+					if (clients.size() == 0)
+					{
+						clearGame();
+						waitTimer.stop();
 					}
 				}
 				else if (input.startsWith(ServerConstants.ADD_PLAYER))
@@ -375,6 +400,40 @@ public class Server implements Runnable
 		socket = null;
 		in = null;
 		out = null;
+	}
+
+	public static void checkHearts(Player curr)
+	{
+		if (gameMode == ServerConstants.CAPTURE_THE_FLAG || curr.livesLeft >= 3)
+			return;
+		if (gameBoard.isAbove(curr.posX, curr.posY + ServerConstants.MOVE_LENGTH, "h"))
+		{
+			int[] pos = gameBoard.whereAbove(curr.posX, curr.posY + ServerConstants.MOVE_LENGTH, "h");
+			sendToAll(ServerConstants.BLOW_UP + pos[0] + '\0' + pos[1]);
+			gameBoard.total[pos[0]][pos[1]] = 'o';
+		}
+		else if (gameBoard.isBelow(curr.posX, curr.posY - ServerConstants.MOVE_LENGTH, "h"))
+		{
+			int[] pos = gameBoard.whereBelow(curr.posX, curr.posY - ServerConstants.MOVE_LENGTH, "h");
+			sendToAll(ServerConstants.BLOW_UP + pos[0] + '\0' + pos[1]);
+			gameBoard.total[pos[0]][pos[1]] = 'o';
+		}
+		else if (gameBoard.isLeft(curr.posX + ServerConstants.MOVE_LENGTH, curr.posY, "h"))
+		{
+			int[] pos = gameBoard.whereLeft(curr.posX + ServerConstants.MOVE_LENGTH, curr.posY, "h");
+			sendToAll(ServerConstants.BLOW_UP + pos[0] + '\0' + pos[1]);
+			gameBoard.total[pos[0]][pos[1]] = 'o';
+		}
+		else if (gameBoard.isRight(curr.posX - ServerConstants.MOVE_LENGTH, curr.posY, "h"))
+		{
+			int[] pos = gameBoard.whereRight(curr.posX - ServerConstants.MOVE_LENGTH, curr.posY, "h");
+			sendToAll(ServerConstants.BLOW_UP + pos[0] + '\0' + pos[1]);
+			gameBoard.total[pos[0]][pos[1]] = 'o';
+		}
+		else
+			return;
+		sendToAll(ServerConstants.ADD_LIFE + curr.name);
+		curr.livesLeft++;
 	}
 
 	// This method checks if all the players that are currently
@@ -475,8 +534,9 @@ public class Server implements Runnable
 		gamePlaying = false;
 		Bot.botCount = 0;
 		gameBoard.resetBoard();
+		gameBoard.scrambleBoard();
 		waveNumber = 1;
-		gameMode = ServerConstants.CAPTURE_THE_FLAG;
+		setGameMode();
 		playerTeam = "red";
 		botTeam = "blue";
 		if (Math.random() > 0.5)
@@ -484,5 +544,12 @@ public class Server implements Runnable
 			playerTeam = "blue";
 			botTeam = "red";
 		}
+	}
+
+	public static void setGameMode()
+	{
+		gameMode = defaultGameMode;
+		if (defaultGameMode == 4)
+			gameMode = (int)(Math.random() * 3 + 1);
 	}
 }

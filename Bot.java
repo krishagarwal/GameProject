@@ -71,17 +71,20 @@ public class Bot
 
 				boolean vertical = Math.abs(nearest.posY - player.posY) > 100;
 				boolean horizontal = Math.abs(nearest.posX - player.posX) > 100;
+				boolean[] gameStatus = {false, false};
 				if ((horizontal && canMoveHorizontally()) || (!canMoveVertically() && vertical))
 				{
 					if (nearest.posX - player.posX < 0 && !Server.gameBoard.isLeft(player.posX, player.posY))
 					{
 						Server.sendToAll(ServerConstants.MOVE_PLAYER_LEFT + name);
-						player.moveLeft();
+						gameStatus = player.moveLeft();
+						Server.checkHearts(player);
 					}
 					else if (!Server.gameBoard.isRight(player.posX, player.posY))
 					{
 						Server.sendToAll(ServerConstants.MOVE_PLAYER_RIGHT + name);
-						player.moveRight();
+						gameStatus = player.moveRight();
+						Server.checkHearts(player);
 					}
 				}
 				else if ((vertical && canMoveVertically()) || (!canMoveHorizontally() && horizontal))
@@ -89,13 +92,25 @@ public class Bot
 					if (nearest.posY - player.posY < 0 && !Server.gameBoard.isAbove(player.posX, player.posY))
 					{
 						Server.sendToAll(ServerConstants.MOVE_PLAYER_UP + name);
-						player.moveUp();
+						gameStatus = player.moveUp();
+						Server.checkHearts(player);
 					}
 					else if (!Server.gameBoard.isBelow(player.posX, player.posY))
 					{
 						Server.sendToAll(ServerConstants.MOVE_PLAYER_DOWN + name);
-						player.moveDown();
+						gameStatus = player.moveDown();
+						Server.checkHearts(player);
 					}
+				}
+				if (Server.gameMode == ServerConstants.CAPTURE_THE_FLAG && gameStatus[0])
+				{
+					player.hasFlag = true;
+					Server.sendToAll(ServerConstants.FLAG_TAKEN + player.name);
+				}
+				if (Server.gameMode == ServerConstants.CAPTURE_THE_FLAG && gameStatus[1])
+				{
+					Server.sendToAll(ServerConstants.WIN + player.name);
+					Server.clearGame();
 				}
 			}
 		});
