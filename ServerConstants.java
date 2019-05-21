@@ -9,7 +9,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
-import javax.sound.sampled.FloatControl;
 import javax.swing.*;
 
 // This class stores a variety of constants used throughout
@@ -77,12 +76,8 @@ public final class ServerConstants
 
 	public static final char RED = '\3';
 	public static final char BLUE = '\4';
-
-	static
-	{
-		ip = "";
-		getLocalHost(null, "not connected");
-	}
+	public static final char NONE_BLUE = '\5';
+	public static final char NONE_RED = '\6';
 
 	public static void playClip(String fileName)
 	{

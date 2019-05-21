@@ -98,12 +98,14 @@ public class ServerThread implements Runnable
 							String killer = input.substring(input.lastIndexOf('\0') + 1);
 							Client.players.get(killed).revive(Integer.parseInt(input.substring(input.indexOf('\0') + 1, input.lastIndexOf('\0'))), killer);
 							char start = ServerConstants.BLUE;
-							if (Client.players.get(killer).team.equals("red"))
+							if (Client.players.get(killer) == null && Client.players.get(killed).team.equals("blue"))
+								start = ServerConstants.NONE_BLUE;
+							else if (Client.players.get(killer) == null)
+								start = ServerConstants.NONE_RED;
+							else if (Client.players.get(killer).team.equals("red"))
 								start = ServerConstants.RED;
-							Client.totalPanel.deathLog.add(start + ServerConstants.regulateName(killer.substring(0, killer.indexOf(ServerConstants.NAME_SEPERATOR)), 6)
-								+ '\0' + ServerConstants.regulateName(killed.substring(0, killed.indexOf(ServerConstants.NAME_SEPERATOR)), 6));
-							System.out.println("\"" + killer.substring(0, killer.indexOf(ServerConstants.NAME_SEPERATOR))
-								+ "\" killed \"" + killed.substring(0, killed.indexOf(ServerConstants.NAME_SEPERATOR)) + "\"");
+							Client.totalPanel.deathLog.add(start + ServerConstants.regulateName(killer.substring(0, killer.indexOf(ServerConstants.NAME_SEPERATOR)), 8)
+								+ '\0' + ServerConstants.regulateName(killed.substring(0, killed.indexOf(ServerConstants.NAME_SEPERATOR)), 8));
 						}
 						else if (!Client.waiting && input.startsWith(ServerConstants.DECREASE_PLAYER_HEALTH))
 							Client.players.get(input.substring(ServerConstants.DECREASE_PLAYER_HEALTH.length())).decreaseHealth();

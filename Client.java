@@ -39,6 +39,7 @@ public class Client
 	// a new JFrame, and displaying the JPanel on the JFrame
 	public Client()
 	{
+		ServerConstants.getLocalHost(null, "Not connected to internet");
 		startedConnection = redFlagTaken = blueFlagTaken = waiting = playing = false;
 		players = new ConcurrentHashMap<String, Player>();
 		bullets = new ConcurrentHashMap<String, Bullet>();

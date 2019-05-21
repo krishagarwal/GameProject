@@ -6,15 +6,8 @@ TotalPanel.java
 
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.geom.Area;
-import java.awt.geom.FlatteningPathIterator;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
-import javax.imageio.ImageIO;
 import javax.swing.*;
 
 // This class is the JPanel class used to display all of the game.
@@ -60,16 +53,19 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		
 		// This method shows some text at the top of the game panel
 		// for only about 1 second and then stops displaying the text
-		textShower = new Timer(1000, (e) ->
+		textShower = new Timer(1000, new ActionListener()
 		{
-			showCount++;
-			if (showCount > 2)
+			public void actionPerformed(ActionEvent e)
 			{
-				showCount = 0;
-				showText = "";
-				textShower.stop();
+				showCount++;
+				if (showCount > 2)
+				{
+					showCount = 0;
+					showText = "";
+					textShower.stop();
+				}
+				repaint();
 			}
-			repaint();
 		});
 
 		chatMoverLeft = new Timer(30, new ActionListener()
@@ -96,55 +92,108 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		// that the player is moving up. It is placed in a Timer
 		// so that when the up arrow key is held down, the
 		// movement is smooth.
-		moverUp = new Timer(30, (e) -> Client.send(ServerConstants.MOVE_PLAYER_UP + Client.playerName));
+		moverUp = new Timer(30, new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				Client.send(ServerConstants.MOVE_PLAYER_UP + Client.playerName);
+			}
+		});
 		
 		// This method is used to send information to the Server
 		// that the player is moving down. It is placed in a Timer
 		// so that when the down arrow key is held down, the
 		// movement is smooth.
-		moverDown = new Timer(30, (e) -> Client.send(ServerConstants.MOVE_PLAYER_DOWN + Client.playerName));
+		moverDown = new Timer(30, new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				Client.send(ServerConstants.MOVE_PLAYER_DOWN + Client.playerName);
+			}
+		});
 
 		// This method is used to send information to the Server
 		// that the player is moving left. It is placed in a Timer
 		// so that when the left arrow key is held down, the
 		// movement is smooth.
-		moverLeft = new Timer(30, (e) -> Client.send(ServerConstants.MOVE_PLAYER_LEFT + Client.playerName));
+		moverLeft = new Timer(30, new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				Client.send(ServerConstants.MOVE_PLAYER_LEFT + Client.playerName);
+			}
+		});
 
 		// This method is used to send information to the Server
 		// that the player is moving right. It is placed in a Timer
 		// so that when the right arrow key is held down, the
 		// movement is smooth.
-		moverRight = new Timer(30, (e) -> Client.send(ServerConstants.MOVE_PLAYER_RIGHT + Client.playerName));
+		moverRight = new Timer(30, new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				Client.send(ServerConstants.MOVE_PLAYER_RIGHT + Client.playerName);
+			}
+		});
 
 		// This method is used to move the screen right in a sliding
 		// motion when switching between different "panels".
-		screenMoverRight = getScreenMover(() -> viewX += 20, 600, 0);
+		screenMoverRight = getScreenMover(new Runnable()
+		{
+			public void run()
+			{
+				viewX += 20;
+			}
+		}, 600, 0);
 
 		// This method is used to move the screen left in a sliding
 		// motion when switching between different "panels".
-		screenMoverLeft = getScreenMover(() -> viewX -= 20, 600, 0);
+		screenMoverLeft = getScreenMover(new Runnable()
+		{
+			public void run()
+			{
+				viewX -= 20;
+			}
+		}, 600, 0);
 
 		// This method is used to move the screen up in a sliding
 		// motion when switching between different "panels".
-		screenMoverUp = getScreenMover(() -> viewY -= 20, 0, 600);
+		screenMoverUp = getScreenMover(new Runnable()
+		{
+			public void run()
+			{
+				viewY -= 20;
+			}
+		}, 0, 600);
 
 		// This method is used to move the screen down in a sliding
 		// motion when switching between different "panels".
-		screenMoverDown = getScreenMover(() -> viewY += 20, 0, 600);
+		screenMoverDown = getScreenMover(new Runnable()
+		{
+			public void run()
+			{
+				viewY += 20;
+			}
+		}, 0, 600);
 
 		// This method is used to move the game board towards the
 		// center of the board when a win situation has occured as
 		// an animation before displaying the results of the game.
-		posMover = new Timer(25, (e) ->
+		
+
+		posMover = new Timer(25, new ActionListener()
 		{
-			posX += movePosX;
-			posY += movePosY;
-			if (posX == ServerConstants.BOARD_SIZE / 2 || posY == ServerConstants.BOARD_SIZE / 2)
+			public void actionPerformed(ActionEvent e)
 			{
-				posMover.stop();
-				showWinner = true;
+				posX += movePosX;
+				posY += movePosY;
+				if (posX == ServerConstants.BOARD_SIZE / 2 || posY == ServerConstants.BOARD_SIZE / 2)
+				{
+					posMover.stop();
+					showWinner = true;
+				}
+				repaint();
 			}
-			repaint();
 		});
 
 		red = new Color(245, 0, 0);
@@ -260,16 +309,12 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 			if (showHoverMainMenu)
 				g.drawImage(mainMenuHover, 185, 310, 230, 60, null);
 			g.drawImage(mainMenu, 185 + ServerConstants.FRAME_SIZE - viewX, 300 - viewY, 230, 60, null);
-			// g.drawString("return to main menu", (int)(300 - g.getFontMetrics().getStringBounds("return to main menu", g).getWidth() / 2)
-			// 	+ ServerConstants.FRAME_SIZE - viewX, 340 - viewY);
 		}
 		else if (showWinner)
 		{
 			g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 25));
 			g.setColor(new Color(125, 125, 125, 220));
 			g.fillRoundRect(10 + ServerConstants.FRAME_SIZE - viewX, 10 - viewY, 580, 560, 15, 15);
-			g.setColor(Color.DARK_GRAY);
-			g.fillRect(185 + ServerConstants.FRAME_SIZE - viewX, 300 - viewY, 230, 60);
 			String topText = "your team won!";
 			Color winStatus = blue;
 			if (won == false)
@@ -300,10 +345,10 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 			g.setColor(losingColor);
 			g.drawString(losingTeam, 300 - secondWidth / 2
 				+ (int)(g.getFontMetrics().getStringBounds("\"" + winner + "\"" + " killed the last ", g).getWidth()) + ServerConstants.FRAME_SIZE - viewX, 200 - viewY);
-			g.setColor(Color.WHITE);
 			g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 15));
-			g.drawString("return to main menu", (int)(300 - g.getFontMetrics().getStringBounds("return to main menu", g).getWidth() / 2)
-				+ ServerConstants.FRAME_SIZE - viewX, 340 - viewY);
+			if (showHoverMainMenu)
+				g.drawImage(mainMenuHover, 185, 310, 230, 60, null);
+			g.drawImage(mainMenu, 185 + ServerConstants.FRAME_SIZE - viewX, 300 - viewY, 230, 60, null);
 		}
 		else if (!posMover.isRunning() && drawHearts && Client.gameMode != ServerConstants.CAPTURE_THE_FLAG)
 		{
@@ -320,9 +365,9 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		{	
 			String display = "Spectating \"" + ServerConstants.regulateName(spectating.substring(0, spectating.indexOf(ServerConstants.NAME_SEPERATOR))) + "\"";
 			int displayWidth = (int)(g.getFontMetrics().getStringBounds(display, g).getWidth());
-			g.fillRoundRect(590 - displayWidth - 20, 10, displayWidth + 20, 25, 15, 15);
+			g.fillRoundRect(590 - displayWidth - 20, 60, displayWidth + 20, 25, 15, 15);
 			g.setColor(Color.WHITE);
-			g.drawString(display, 580 - displayWidth, 30);
+			g.drawString(display, 580 - displayWidth, 80);
 			g.setColor(new Color(125, 125, 125, 100));
 		}
 		if (!posMover.isRunning() && !showText.equals(""))
@@ -340,14 +385,14 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 				g.drawImage(rightArr, chatX + 180, 20, 20, 20, null);
 			else
 				g.drawImage(leftArr, chatX + 180, 20, 20, 20, null);
-			g.fillRoundRect(423, 445, 167, 125, 15, 15);
+			g.fillRoundRect(405, 445, 185, 125, 15, 15);
 			g.setColor(new Color(200, 200, 200, 150));
 			g.fillRoundRect(chatX, 10, 210, 40, 15, 15);
-			g.fillRoundRect(423, 445, 167, 40, 15, 15);
+			g.fillRoundRect(405, 445, 185, 40, 15, 15);
 			g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 15));
 			g.setColor(Color.WHITE);
 			g.drawString("Team Chat", chatX + 10, 40);
-			g.drawString("Recent Deaths", 433, 475);
+			g.drawString("Recent Deaths", 415, 475);
 			g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 10));
 			g.setColor(Color.WHITE);
 			displayMessages(g);
@@ -371,7 +416,6 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		g.drawString(displayName, 300 - nameWidth / 2 + ServerConstants.FRAME_SIZE - viewX, 310 + ServerConstants.FRAME_SIZE * 2 - viewY);
 
 		// For my reference: StartPanel
-		int playWidth = (int)(g.getFontMetrics().getStringBounds("play", g).getWidth());
 		g.setColor(Color.BLACK);
 		g.fillRect(ServerConstants.FRAME_SIZE - viewX, ServerConstants.FRAME_SIZE - viewY, 600, 600);
 		if (showHoverPlay)
@@ -440,23 +484,23 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 				repaint();
 			}
 		}
-		else if (Client.playing && viewX == ServerConstants.FRAME_SIZE && viewY == 0 && allAreStopped() && !Client.players.get(Client.playerName).dead)
+		else if (Client.playing && viewX == ServerConstants.FRAME_SIZE && viewY == 0 && allAreStopped())
 		{
 			int e = evt.getKeyCode();
-			if (e == KeyEvent.VK_UP)
+			if (e == KeyEvent.VK_UP && !Client.players.get(Client.playerName).dead)
 				moverUp.start();
-			else if (e == KeyEvent.VK_DOWN)
+			else if (e == KeyEvent.VK_DOWN && !Client.players.get(Client.playerName).dead)
 				moverDown.start();
-			else if (e == KeyEvent.VK_LEFT)
+			else if (e == KeyEvent.VK_LEFT && !Client.players.get(Client.playerName).dead)
 				moverLeft.start();
-			else if (e == KeyEvent.VK_RIGHT)
+			else if (e == KeyEvent.VK_RIGHT && !Client.players.get(Client.playerName).dead)
 				moverRight.start();
-			else if (evt.getKeyCode() == KeyEvent.VK_BACK_SPACE && sendText.length() > 5)
+			else if (e == KeyEvent.VK_BACK_SPACE && sendText.length() > 5)
 			{
 				sendText = sendText.substring(0, sendText.length() - 1);
 				repaint();
 			}
-			else if (chatX == 10 && evt.getKeyCode() == KeyEvent.VK_ENTER && sendText.length() > 5)
+			else if (chatX == 10 && e == KeyEvent.VK_ENTER && sendText.length() > 5)
 			{
 				Client.send(ServerConstants.SEND_MESSAGE + Client.players.get(Client.playerName).team + '\0'
 					+ ServerConstants.regulateName(Client.playerName.substring(0, Client.playerName.indexOf(ServerConstants.NAME_SEPERATOR))) + sendText.substring(3));
@@ -759,7 +803,17 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 	public int displayDeath(Graphics g, int x, int y, String death)
 	{
 		Color first = blue, second = red;
-		if (death.charAt(0) == ServerConstants.RED)
+		if (death.charAt(0) == ServerConstants.NONE_BLUE)
+		{
+			first = new Color(0, 0, 0, 0);
+			second = blue;
+		}
+		if (death.charAt(0) == ServerConstants.NONE_RED)
+		{
+			first = new Color(0, 0, 0, 0);
+			second = red;
+		}
+		else if (death.charAt(0) == ServerConstants.RED)
 		{
 			first = red;
 			second = blue;

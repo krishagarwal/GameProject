@@ -48,6 +48,7 @@ public class Server implements Runnable
 	// being run.
 	public static void main(String[] args)
 	{
+		ServerConstants.getLocalHost(null, "Not connected to internet");
 		Object[] options = {"Capture the Flag", "Red vs. Blue", "Collaborative", "Random"};
 		defaultGameMode = JOptionPane.showOptionDialog(null, "Choose the game mode for this server.", "Game Mode",
 			JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, null) + 1;
