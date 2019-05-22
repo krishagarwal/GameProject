@@ -92,9 +92,9 @@ public class Server implements Runnable
 			// game before before the game starts.
 			public void actionPerformed(ActionEvent e)
 			{
-				sendToAll(ServerConstants.WAIT_BEFORE_PLAY + count);
 				count--;
-				if (count >= 0)
+				sendToAll(ServerConstants.WAIT_BEFORE_PLAY + count);
+				if (count > 0)
 					return;
 				waitTimer.stop();
 				sendToAll(ServerConstants.READY_TO_PLAY + gameMode + '\0' + gameBoard.toString());

@@ -303,14 +303,3 @@ public class Board
 		return ret;
 	}
 }
-
-/*
-imstructions:
-1. arrow keys to move
-2. mouse to shoot
-4. shrapnel bombs affect all players
-4. in capture the flag, take the opponent flag to your side to win
-5. in red vs. blue, defeat all bots
-5. in collaborative, beat the bots
-3. in collaborative/red vs. blue, 3 lives, but can collect
-*/

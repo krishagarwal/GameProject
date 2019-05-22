@@ -252,12 +252,12 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		}
 		else
 			g.fillRoundRect(235, 5, 170, 50, 15, 15);
-		
 		if (posMover.isRunning());
 		else if (Client.gameMode == ServerConstants.RED_VS_BLUE)
 			g.drawImage(rvb, 240, 10, 160, 40, null);
 		else if (Client.gameMode == ServerConstants.COLLABORATIVE)
 			g.drawImage(collab, 240, 10, 160, 40, null);
+		
 		for (Player curr : Client.players.values())
 		{
 			if (!curr.dead)
