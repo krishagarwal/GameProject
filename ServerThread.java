@@ -43,26 +43,26 @@ public class ServerThread implements Runnable
 						String input = Client.serverIn.nextLine();
 						if (input.equals(ServerConstants.GAME_IN_SESSION))
 						{
-							Client.totalPanel.setWaitText("Game is in session. Please wait for the next game.");
+							Client.totalPanel.setWaitText("Game is in session. Try to connect later.");
 							Client.send(ServerConstants.DELETE_PLAYER + Client.playerName);
-							Client.waiting = true;
+							Client.clearGame();
 						}
-						else if (!Client.waiting && input.startsWith(ServerConstants.ADD_LIFE))
+						else if (input.startsWith(ServerConstants.ADD_LIFE))
 							Client.players.get(input.substring(ServerConstants.ADD_LIFE.length())).livesLeft++;
-						else if (!Client.waiting && input.startsWith(ServerConstants.SEND_MESSAGE))
+						else if (input.startsWith(ServerConstants.SEND_MESSAGE))
 							Client.totalPanel.addNewMessage(input.substring(ServerConstants.SEND_MESSAGE.length()));
-						else if (!Client.waiting && input.startsWith(ServerConstants.BLOW_UP))
+						else if (input.startsWith(ServerConstants.BLOW_UP))
 							Client.totalPanel.gameBoard.total[Integer.parseInt(input.substring(ServerConstants.BLOW_UP.length(), input.indexOf('\0')))]
 								[Integer.parseInt(input.substring(input.indexOf('\0') + 1))] = 'o';
-						else if (!Client.waiting && input.startsWith(ServerConstants.CREATE_SHRAPNEL))
+						else if (input.startsWith(ServerConstants.CREATE_SHRAPNEL))
 							Client.bullets.put(input.substring(ServerConstants.CREATE_SHRAPNEL.length(), input.indexOf('\0')), 
 								Shrapnel.getNewShrapnel(input.substring(input.indexOf('\0') + 1)));
-						else if (!Client.waiting && input.startsWith(ServerConstants.NEW_WAVE))
+						else if (input.startsWith(ServerConstants.NEW_WAVE))
 							Client.totalPanel.displayText("Wave " + input.substring(ServerConstants.NEW_WAVE.length()));
-						else if (!Client.waiting && input.startsWith(ServerConstants.MOVE_GUN))
+						else if (input.startsWith(ServerConstants.MOVE_GUN))
 							Client.players.get(input.substring(ServerConstants.MOVE_GUN.length(), input.indexOf('\0'))).gunDegree
 								= Double.parseDouble(input.substring(input.indexOf('\0') + 1));
-						else if (!Client.waiting && input.startsWith(ServerConstants.FLAG_TAKEN))
+						else if (input.startsWith(ServerConstants.FLAG_TAKEN))
 						{
 							Player player = Client.players.get(input.substring(ServerConstants.FLAG_TAKEN.length()));
 							player.hasFlag = true;
@@ -73,24 +73,16 @@ public class ServerThread implements Runnable
 						}
 						else if (input.startsWith(ServerConstants.WIN) && !input.startsWith(ServerConstants.FLAG_TAKEN))
 						{
-							if (!Client.waiting)
-							{
-								Client.playing = false;
-								String name = input.substring(ServerConstants.WIN.length());
-								Client.totalPanel.stopAll();
-								Client.totalPanel.winningTeam = Client.players.get(name).team;
-								if (Client.totalPanel.winningTeam.equals(Client.players.get(Client.playerName).team))
-									Client.totalPanel.won = true;
-								Client.totalPanel.winner = ServerConstants.regulateName(name.substring(0, name.indexOf(ServerConstants.NAME_SEPERATOR)));
-							}
+							String name = input.substring(ServerConstants.WIN.length());
+							Client.totalPanel.stopAll();
+							Client.totalPanel.winningTeam = Client.players.get(name).team;
+							if (Client.totalPanel.winningTeam.equals(Client.players.get(Client.playerName).team))
+								Client.totalPanel.won = true;
+							Client.totalPanel.winner = ServerConstants.regulateName(name.substring(0, name.indexOf(ServerConstants.NAME_SEPERATOR)));
 							Client.clearGame();
-							if (Client.waiting)
-							{
-								Client.connect();
-								Client.waiting = false;
-							}
+							Client.playing = false;
 						}
-						else if (!Client.waiting && input.startsWith(ServerConstants.REVIVE_PLAYER) && !input.startsWith(ServerConstants.WIN))
+						else if (input.startsWith(ServerConstants.REVIVE_PLAYER) && !input.startsWith(ServerConstants.WIN))
 						{
 							String killed = input.substring(ServerConstants.REVIVE_PLAYER.length(), input.indexOf('\0'));
 							String killer = input.substring(input.lastIndexOf('\0') + 1);
@@ -105,34 +97,34 @@ public class ServerThread implements Runnable
 							Client.totalPanel.deathLog.add(start + ServerConstants.regulateName(killer.substring(0, killer.indexOf(ServerConstants.NAME_SEPERATOR)), 8)
 								+ '\0' + ServerConstants.regulateName(killed.substring(0, killed.indexOf(ServerConstants.NAME_SEPERATOR)), 8));
 						}
-						else if (!Client.waiting && input.startsWith(ServerConstants.DECREASE_PLAYER_HEALTH))
+						else if (input.startsWith(ServerConstants.DECREASE_PLAYER_HEALTH))
 							Client.players.get(input.substring(ServerConstants.DECREASE_PLAYER_HEALTH.length())).decreaseHealth();
-						else if (!Client.waiting && input.startsWith(ServerConstants.UPDATE_BULLET))
+						else if (input.startsWith(ServerConstants.UPDATE_BULLET))
 						{
 							Bullet curr = Client.bullets.get(input.substring(ServerConstants.UPDATE_BULLET.length()));
 							if (curr != null)
 								curr.update();
 						}
-						else if (!Client.waiting && input.startsWith(ServerConstants.MOVE_PLAYER_UP))
+						else if (input.startsWith(ServerConstants.MOVE_PLAYER_UP))
 							Client.players.get(input.substring(ServerConstants.MOVE_PLAYER_UP.length())).moveUp();
-						else if (!Client.waiting && input.startsWith(ServerConstants.MOVE_PLAYER_DOWN))
+						else if (input.startsWith(ServerConstants.MOVE_PLAYER_DOWN))
 							Client.players.get(input.substring(ServerConstants.MOVE_PLAYER_DOWN.length())).moveDown();
-						else if (!Client.waiting && input.startsWith(ServerConstants.MOVE_PLAYER_LEFT))
+						else if (input.startsWith(ServerConstants.MOVE_PLAYER_LEFT))
 							Client.players.get(input.substring(ServerConstants.MOVE_PLAYER_LEFT.length())).moveLeft();
-						else if (!Client.waiting && input.startsWith(ServerConstants.MOVE_PLAYER_RIGHT))
+						else if (input.startsWith(ServerConstants.MOVE_PLAYER_RIGHT))
 							Client.players.get(input.substring(ServerConstants.MOVE_PLAYER_RIGHT.length())).moveRight();
-						else if (!Client.waiting && input.startsWith(ServerConstants.TERMINATE_BULLET))
+						else if (input.startsWith(ServerConstants.TERMINATE_BULLET))
 							Client.bullets.remove(input.substring(ServerConstants.TERMINATE_BULLET.length()));
-						else if (!Client.waiting && input.startsWith(ServerConstants.CREATE_BULLET))
+						else if (input.startsWith(ServerConstants.CREATE_BULLET))
 							Client.bullets.put(input.substring(ServerConstants.CREATE_BULLET.length(), input.indexOf('\0')), 
 								Bullet.getNewBullet(input.substring(input.indexOf('\0') + 1)));
-						else if (!Client.waiting && input.startsWith(ServerConstants.SET_TEAM))
+						else if (input.startsWith(ServerConstants.SET_TEAM))
 							Client.team = input.substring(ServerConstants.SET_TEAM.length());
-						else if (!Client.waiting && input.startsWith(ServerConstants.WAIT_BEFORE_PLAY))
+						else if (input.startsWith(ServerConstants.WAIT_BEFORE_PLAY))
 							Client.totalPanel.setWaitText("starting in " + Integer.parseInt(input.substring(ServerConstants.WAIT_BEFORE_PLAY.length())));
-						else if (!Client.waiting && input.startsWith(ServerConstants.DELETE_PLAYER))
+						else if (input.startsWith(ServerConstants.DELETE_PLAYER))
 							Client.players.remove(input.substring(ServerConstants.DELETE_PLAYER.length()));
-						else if (!Client.waiting && input.startsWith(ServerConstants.ADD_PLAYER))
+						else if (input.startsWith(ServerConstants.ADD_PLAYER))
 							Client.players.put(input.substring(ServerConstants.ADD_PLAYER.length(), input.indexOf('\0')), 
 								Player.getNewPlayer(input.substring(ServerConstants.ADD_PLAYER.length())));
 						else if (input.startsWith(ServerConstants.READY_TO_PLAY) && !input.startsWith(ServerConstants.ADD_PLAYER))

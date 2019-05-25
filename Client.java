@@ -26,7 +26,7 @@ public class Client
 	static PrintWriter out;
 	static TotalPanel totalPanel;
 	static JFrame frame;
-	static boolean waiting, playing, blueFlagTaken, redFlagTaken, startedConnection;
+	static boolean playing, blueFlagTaken, redFlagTaken, startedConnection;
 	static int bulletCount = 0, gameMode = 0;
 	static WindowListener frameListener;
 
@@ -36,7 +36,7 @@ public class Client
 	public Client()
 	{
 		ServerConstants.getLocalHost(null, "Not connected to internet");
-		startedConnection = redFlagTaken = blueFlagTaken = waiting = playing = false;
+		startedConnection = redFlagTaken = blueFlagTaken = playing = false;
 		players = new ConcurrentHashMap<String, Player>();
 		bullets = new ConcurrentHashMap<String, Bullet>();
 		playerName = ip = team = "";
@@ -79,10 +79,18 @@ public class Client
 			// to notify the Server to delete the player.
 			public void windowClosing(WindowEvent e)
 			{
-				if (out != null)
+				try
 				{
-					send(ServerConstants.DELETE_PLAYER + Client.playerName);
-					send(ServerConstants.REMOVE_CLIENT);
+					if (out != null)
+					{
+						send(ServerConstants.DELETE_PLAYER + Client.playerName);
+						send(ServerConstants.REMOVE_CLIENT);
+					}
+				}
+				catch(Exception exc) {}
+				finally
+				{
+					System.exit(1);
 				}
 			}
 		};
@@ -121,7 +129,7 @@ public class Client
 		bulletCount = 0;
 		players.clear();
 		bullets.clear();
-		if (!waiting)
+		if (playing)
 		{
 			TotalPanel.movePosX = Math.abs(ServerConstants.BOARD_SIZE / 2 - TotalPanel.posX) / (ServerConstants.BOARD_SIZE / 2 - TotalPanel.posX) * 5;
 			TotalPanel.movePosY = Math.abs(ServerConstants.BOARD_SIZE / 2 - TotalPanel.posY) / (ServerConstants.BOARD_SIZE / 2 - TotalPanel.posY) * 5;

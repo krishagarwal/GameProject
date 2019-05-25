@@ -292,13 +292,17 @@ public class Server implements Runnable
 	public void run()
 	{
 		int rand = (int)(Math.random() * 2);
+		String team = "blue";
 		if (gameMode == ServerConstants.COLLABORATIVE)
 		{
 			out.println(ServerConstants.SET_TEAM + playerTeam);
 			if (playerTeam.equals("blue"))
 				blueCount++;
 			else
+			{
 				redCount++;
+				team = "red";
+			}
 		}
 		else if (!gamePlaying && (blueCount < redCount || (blueCount == redCount && rand == 0)))
 		{
@@ -309,6 +313,7 @@ public class Server implements Runnable
 		{
 			out.println(ServerConstants.SET_TEAM + "red");
 			redCount++;
+			team = "red";
 		}
 		while (!socket.isClosed())
 		{
@@ -358,7 +363,12 @@ public class Server implements Runnable
 					addBulletLog(input);
 				else if (input.startsWith(ServerConstants.DELETE_PLAYER))
 				{
-					players.remove(input.substring(ServerConstants.DELETE_PLAYER.length()));
+					String name = input.substring(ServerConstants.DELETE_PLAYER.length());
+					if (team.equals("red"))
+						redCount--;
+					else
+						blueCount--;
+					players.remove(name);
 					if (allAreBots())
 						clearGame();
 					else if (players.size() == 1 && gameMode != ServerConstants.CAPTURE_THE_FLAG)
