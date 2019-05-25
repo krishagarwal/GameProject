@@ -4,6 +4,7 @@ Krish Agarwal
 ServerConstants.java
 */
 
+import java.awt.HeadlessException;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -102,7 +103,15 @@ public final class ServerConstants
 	// class to display the IP address to connect to.
 	public static void showMessage(JFrame parent, String title, String content)
 	{
-		JOptionPane.showMessageDialog(parent, content, title, JOptionPane.INFORMATION_MESSAGE);
+		try
+		{
+			JOptionPane.showMessageDialog(parent, content, title, JOptionPane.INFORMATION_MESSAGE);
+		}
+		catch(HeadlessException he) {}
+		finally
+		{
+			System.exit(2);
+		}
 	}
 
 	// This method returns the IP address of the current computer
@@ -120,7 +129,7 @@ public final class ServerConstants
 		catch(UnknownHostException e)
 		{
 			ServerConstants.showErrorMessage(parent, "Error", error);
-			System.exit(2);
+			System.exit(2);	
 		}
 		return ip;
 	}
@@ -130,7 +139,15 @@ public final class ServerConstants
 	// an error.
 	public static void showErrorMessage(JFrame parent, String title, String content)
 	{
-		JOptionPane.showMessageDialog(parent, content, title, JOptionPane.ERROR_MESSAGE);
+		try
+		{
+			JOptionPane.showMessageDialog(parent, content, title, JOptionPane.ERROR_MESSAGE);
+		}
+		catch(HeadlessException he) {}
+		finally
+		{
+			System.exit(2);
+		}
 	}
 
 	public static String regulateName(String in)
