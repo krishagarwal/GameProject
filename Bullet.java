@@ -5,11 +5,6 @@ Bullet.java
 */
 
 import java.awt.*;
-import java.awt.event.*;
-import java.awt.geom.AffineTransform;
-
-import javax.swing.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 // This class is used to store information on each bullet fired
 // during game play. It stores the position and the slope of the

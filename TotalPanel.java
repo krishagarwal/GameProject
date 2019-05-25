@@ -27,7 +27,7 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 	CopyOnWriteArrayList<String> messages, deathLog;
 	private Color red, blue;
 	Image heart, play, playHover, rvb, ctf, collab, leftArr, rightArr, mainMenu, mainMenuHover, moveDemo, shootDemo, bombsDemo, ctfDemo, rvbDemo,
-		collabDemo, heartsDemo, instructions, instructionsHover, readyToPlay, readyToPlayHover, spinner, area51;
+		collabDemo, heartsDemo, instructions, instructionsHover, readyToPlay, readyToPlayHover, spinner, area51, back, backHover;
 	double spinnerVelocity, spinnerAngle;
 
 	// This constructor initializes the JPanel. The layout is set to
@@ -64,6 +64,8 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		heartsDemo = Toolkit.getDefaultToolkit().createImage("hearts_demo.gif");
 		spinner = new ImageIcon("spinner.png").getImage();
 		area51 = new ImageIcon("area_51.png").getImage();
+		back = new ImageIcon("back.png").getImage();
+		backHover = new ImageIcon("bsck_hover.png").getImage();
 		
 		textShower = new Timer(1000, new ActionListener()
 		{

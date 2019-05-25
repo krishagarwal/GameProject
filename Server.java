@@ -6,10 +6,8 @@ Server.java
 
 import javax.swing.*;
 import java.awt.event.*;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.io.IOException;
@@ -49,10 +47,10 @@ public class Server implements Runnable
 	public static void main(String[] args)
 	{
 		ServerConstants.getLocalHost(null, "Not connected to internet");
-		Object[] options = {"Capture the Flag", "Red vs. Blue", "Collaborative", "Random"};
-		defaultGameMode = JOptionPane.showOptionDialog(null, "Choose the game mode for this server.", "Game Mode",
-			JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, null) + 1;
-		if (defaultGameMode == JOptionPane.CLOSED_OPTION)
+		// Object[] options = {"Capture the Flag", "Red vs. Blue", "Collaborative", "Random"};
+		// defaultGameMode = JOptionPane.showOptionDialog(null, "Choose the game mode for this server.", "Game Mode",
+		// 	JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, null) + 1;
+		// if (defaultGameMode == JOptionPane.CLOSED_OPTION)
 			defaultGameMode = 4;
 		shrapnelCount = redCount = blueCount = 0;
 		waveNumber = 1;

@@ -82,10 +82,7 @@ public class Client
 				try
 				{
 					if (out != null)
-					{
 						send(ServerConstants.DELETE_PLAYER + Client.playerName);
-						send(ServerConstants.REMOVE_CLIENT);
-					}
 				}
 				catch(Exception exc) {}
 				finally
