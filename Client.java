@@ -41,9 +41,11 @@ public class Client
 		bullets = new ConcurrentHashMap<String, Bullet>();
 		playerName = ip = team = "";
 		totalPanel = new TotalPanel();
-		
 		frame = new JFrame("Area 51");
-		frame.setSize(ServerConstants.FRAME_SIZE, ServerConstants.FRAME_SIZE);
+		if (System.getProperty("os.name").indexOf("win") >= 0)
+			frame.setSize(ServerConstants.FRAME_SIZE + 10, ServerConstants.FRAME_SIZE + 25);
+		else
+			frame.setSize(ServerConstants.FRAME_SIZE, ServerConstants.FRAME_SIZE);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setContentPane(totalPanel);
 		frame.setResizable(false);
