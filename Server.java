@@ -62,19 +62,19 @@ public class Server implements Runnable
 			playerTeam = "blue";
 			botTeam = "red";
 		}
-		Thread message = new Thread(new Runnable()
-		{
-			// This is a method used to display the IP address that
-			// Clients should connect to. It runs separate from the
-			// rest of the Server program so that the message can be
-			// displayed even while the Server performs certain tasks.
-			public void run()
-			{
-				ServerConstants.showMessage(null, "Play with your friends!", "Connect clients using this IP address: " +
-					ServerConstants.getLocalHost(null, "The server is not connected to the internet. Please reconnect and try again."));
-			}
-		});
-		message.start();
+		// Thread message = new Thread(new Runnable()
+		// {
+		// 	// This is a method used to display the IP address that
+		// 	// Clients should connect to. It runs separate from the
+		// 	// rest of the Server program so that the message can be
+		// 	// displayed even while the Server performs certain tasks.
+		// 	public void run()
+		// 	{
+		// 		ServerConstants.showMessage(null, "Play with your friends!", "Connect clients using this IP address: " +
+		// 			ServerConstants.getLocalHost(null, "The server is not connected to the internet. Please reconnect and try again."));
+		// 	}
+		// });
+		// message.start();
 
 		count = 0;
 		gamePlaying = false;

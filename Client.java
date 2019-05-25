@@ -149,7 +149,7 @@ public class Client
 		try
 		{
 			if (ip.equals(""))
-				ip += ServerConstants.getLocalHost(frame, "You do not seem to be connected to the internet.\nReconnect and try again.");
+				ip += "54.185.26.137";
 			socket = new Socket(ip, ServerConstants.PORT_NUMBER);
 			Thread.sleep(1000);
 			Thread server = new Thread(new ServerThread());
