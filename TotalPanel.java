@@ -6,25 +6,29 @@ TotalPanel.java
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 import javax.swing.*;
 
 // This class is the JPanel class used to display all of the game.
 // It does not store separate JPanels for different screens, rather
-// displays them all reative to a variable determining the current
+// displays them all relative to a variable determining the current
 // screen to display to allow the capability of sliding the screen
 // instead of a sudden change using CardLayout.
 public class TotalPanel extends JPanel implements MouseListener, MouseMotionListener, KeyListener
 {
-	public static int chatX, viewX, viewY, origX, origY, posX, posY, movePosX, movePosY, showCount;
+	public static int chatX, viewX, viewY, origX, origY, posX, posY, movePosX, movePosY, showCount, instructionScrollCount;
 	String waitText, winningTeam, winner, spectating, showText, sendText;
 	public Board gameBoard;
-	Timer screenMoverLeft, screenMoverRight, screenMoverDown, screenMoverUp, moverUp, moverDown, moverLeft, moverRight, posMover, textShower, chatMoverLeft, chatMoverRight;
-	boolean loading, showWinner, won, showEnter, showHoverPlay, hasEnteredName, showHoverMainMenu;
+	Timer screenMoverLeft, screenMoverRight, screenMoverDown, screenMoverUp, screenMoverLeftDown, moverUp, moverDown, moverLeft, moverRight, posMover,
+		textShower, chatMoverLeft, chatMoverRight, instructionScroller, instructionBack, spinnerMover;
+	boolean loading, showWinner, won, showEnter, showHoverPlay, hasEnteredName, showHoverMainMenu, showHoverInstruction, showHoverReadyToPlay, needMoveLeft;
 	CopyOnWriteArrayList<String> messages, deathLog;
 	private Color red, blue;
-	Image heart, play, playHover, rvb, ctf, collab, leftArr, rightArr, mainMenu, mainMenuHover;
+	Image heart, play, playHover, rvb, ctf, collab, leftArr, rightArr, mainMenu, mainMenuHover, moveDemo, shootDemo, bombsDemo, ctfDemo, rvbDemo,
+		collabDemo, heartsDemo, instructions, instructionsHover, readyToPlay, readyToPlayHover, spinner, area51;
+	double spinnerVelocity, spinnerAngle;
 
 	// This constructor initializes the JPanel. The layout is set to
 	// null because all components are drawn in paintComponent(). It
@@ -32,6 +36,7 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 	// variables.
 	public TotalPanel()
 	{
+		spinnerAngle = spinnerVelocity = 0;
 		setLayout(null);
 		showText = spectating = waitText = winningTeam = winner = "";
 		requestFocus();
@@ -42,7 +47,7 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		origX = viewX = ServerConstants.FRAME_SIZE;
 		origY = viewY = 2 * ServerConstants.FRAME_SIZE;
 		gameBoard = new Board();
-		showHoverMainMenu = hasEnteredName = showHoverPlay = loading = won = false;
+		needMoveLeft = showHoverReadyToPlay = showHoverInstruction = showHoverMainMenu = hasEnteredName = showHoverPlay = loading = won = false;
 		showEnter = true;
 		heart = new ImageIcon("heart.png").getImage();
 		rvb = new ImageIcon("red_vs_blue.png").getImage();
@@ -50,11 +55,21 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		collab = new ImageIcon("collaborative.png").getImage();
 		leftArr = new ImageIcon("left_arrow.png").getImage();
 		rightArr = new ImageIcon("right_arrow.png").getImage();
+		moveDemo = Toolkit.getDefaultToolkit().createImage("move_demo.gif");
+		shootDemo = Toolkit.getDefaultToolkit().createImage("shooting_demo.gif");
+		bombsDemo = Toolkit.getDefaultToolkit().createImage("bombs_demo.gif");
+		ctfDemo = Toolkit.getDefaultToolkit().createImage("ctf_demo.gif");
+		rvbDemo = Toolkit.getDefaultToolkit().createImage("rvb_demo.gif");
+		collabDemo = Toolkit.getDefaultToolkit().createImage("collab_demo.gif");
+		heartsDemo = Toolkit.getDefaultToolkit().createImage("hearts_demo.gif");
+		spinner = new ImageIcon("spinner.png").getImage();
+		area51 = new ImageIcon("area_51.png").getImage();
 		
-		// This method shows some text at the top of the game panel
-		// for only about 1 second and then stops displaying the text
 		textShower = new Timer(1000, new ActionListener()
 		{
+			// This method shows some text at the bottom of the game panel
+			// for only about 1 second and then stops displaying the text. It
+			// is used to show the waves in collaborative mode.
 			public void actionPerformed(ActionEvent e)
 			{
 				showCount++;
@@ -70,6 +85,8 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 
 		chatMoverLeft = new Timer(30, new ActionListener()
 		{
+			// This method moves the chatbox left when the user wants
+			// to collapse the chatbox.
 			public void actionPerformed(ActionEvent e)
 			{
 				chatX -= 10;
@@ -80,6 +97,8 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 
 		chatMoverRight = new Timer(30, new ActionListener()
 		{
+			// This method moves the chatbox right when the user wants
+			// to expand the chatbox.
 			public void actionPerformed(ActionEvent e)
 			{
 				chatX += 10;
@@ -88,101 +107,110 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 			}
 		});
 		
-		// This method is used to send information to the Server
-		// that the player is moving up. It is placed in a Timer
-		// so that when the up arrow key is held down, the
-		// movement is smooth.
 		moverUp = new Timer(30, new ActionListener()
 		{
+			// This method is used to send information to the Server
+			// that the player is moving up. It is placed in a Timer
+			// so that when the up arrow key is held down, the
+			// movement is smooth.
 			public void actionPerformed(ActionEvent e)
 			{
 				Client.send(ServerConstants.MOVE_PLAYER_UP + Client.playerName);
 			}
 		});
 		
-		// This method is used to send information to the Server
-		// that the player is moving down. It is placed in a Timer
-		// so that when the down arrow key is held down, the
-		// movement is smooth.
 		moverDown = new Timer(30, new ActionListener()
 		{
+			// This method is used to send information to the Server
+			// that the player is moving down. It is placed in a Timer
+			// so that when the down arrow key is held down, the
+			// movement is smooth.
 			public void actionPerformed(ActionEvent e)
 			{
 				Client.send(ServerConstants.MOVE_PLAYER_DOWN + Client.playerName);
 			}
 		});
 
-		// This method is used to send information to the Server
-		// that the player is moving left. It is placed in a Timer
-		// so that when the left arrow key is held down, the
-		// movement is smooth.
 		moverLeft = new Timer(30, new ActionListener()
 		{
+			// This method is used to send information to the Server
+			// that the player is moving left. It is placed in a Timer
+			// so that when the left arrow key is held down, the
+			// movement is smooth.
 			public void actionPerformed(ActionEvent e)
 			{
 				Client.send(ServerConstants.MOVE_PLAYER_LEFT + Client.playerName);
 			}
 		});
 
-		// This method is used to send information to the Server
-		// that the player is moving right. It is placed in a Timer
-		// so that when the right arrow key is held down, the
-		// movement is smooth.
 		moverRight = new Timer(30, new ActionListener()
 		{
+			// This method is used to send information to the Server
+			// that the player is moving right. It is placed in a Timer
+			// so that when the right arrow key is held down, the
+			// movement is smooth.
 			public void actionPerformed(ActionEvent e)
 			{
 				Client.send(ServerConstants.MOVE_PLAYER_RIGHT + Client.playerName);
 			}
 		});
 
-		// This method is used to move the screen right in a sliding
-		// motion when switching between different "panels".
 		screenMoverRight = getScreenMover(new Runnable()
 		{
+			// This method is used to move the screen right in a sliding
+			// motion when switching between different "panels".
 			public void run()
 			{
 				viewX += 20;
 			}
 		}, 600, 0);
 
-		// This method is used to move the screen left in a sliding
-		// motion when switching between different "panels".
 		screenMoverLeft = getScreenMover(new Runnable()
 		{
+			// This method is used to move the screen left in a sliding
+			// motion when switching between different "panels".
 			public void run()
 			{
 				viewX -= 20;
 			}
 		}, 600, 0);
 
-		// This method is used to move the screen up in a sliding
-		// motion when switching between different "panels".
 		screenMoverUp = getScreenMover(new Runnable()
 		{
+			// This method is used to move the screen up in a sliding
+			// motion when switching between different "panels".
 			public void run()
 			{
 				viewY -= 20;
 			}
 		}, 0, 600);
 
-		// This method is used to move the screen down in a sliding
-		// motion when switching between different "panels".
 		screenMoverDown = getScreenMover(new Runnable()
 		{
+			// This method is used to move the screen down in a sliding
+			// motion when switching between different "panels".
 			public void run()
 			{
 				viewY += 20;
 			}
 		}, 0, 600);
 
-		// This method is used to move the game board towards the
-		// center of the board when a win situation has occured as
-		// an animation before displaying the results of the game.
-		
+		screenMoverLeftDown = getScreenMover(new Runnable()
+		{
+			// This method is used to move the screen down and left in a
+			// sliding motion when switching between different "panels".
+			public void run()
+			{
+				viewX -= 20;
+				viewY += 20;
+			}
+		}, 600, 600);
 
 		posMover = new Timer(25, new ActionListener()
 		{
+			// This method is used to move the game board towards the
+			// center of the board when a win situation has occured as
+			// an animation before displaying the results of the game.
 			public void actionPerformed(ActionEvent e)
 			{
 				posX += movePosX;
@@ -196,12 +224,65 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 			}
 		});
 
+		instructionScroller = new Timer(100, new ActionListener()
+		{
+			// This method scrolls through each of the instruction
+			// GIFs by waiting for 2.5 seconds and then sliding to
+			// the next instruction.
+			public void actionPerformed(ActionEvent e)
+			{
+				instructionScrollCount++;
+				if (instructionScrollCount % 25 != 0)
+					return;
+				if (viewY == ServerConstants.FRAME_SIZE * 8)
+				{
+					instructionBack.start();
+					instructionScrollCount = 0;
+					instructionScroller.stop();
+				}
+				else if (allAreStopped())
+					moveDown();
+			}
+		});
+
+		instructionBack = new Timer(5, new ActionListener()
+		{
+			// This method scrolls all the way back to the top when
+			// the instructionScroller reaches the last gif.
+			public void actionPerformed(ActionEvent e)
+			{
+				viewY -= 20;
+				repaint();
+				if (viewY == ServerConstants.FRAME_SIZE)
+				{
+					instructionBack.stop();
+					origX = viewX;
+					origY = viewY;
+				}
+			}
+		});
+
+		spinnerMover = new Timer(50, new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				spinnerAngle += spinnerVelocity * Math.PI / 12;
+				spinnerVelocity *= 0.99;
+				repaint();
+			}
+		});
+		spinnerMover.start();
+
 		red = new Color(245, 0, 0);
 		blue = new Color(0, 140, 245);
 		play = new ImageIcon("play.png").getImage();
 		playHover = new ImageIcon("play_hover.png").getImage();
 		mainMenu = new ImageIcon("main_menu.png").getImage();
 		mainMenuHover = new ImageIcon("main_menu_hover.png").getImage();
+		instructions = new ImageIcon("instructions.png").getImage();
+		instructionsHover = new ImageIcon("instructions_hover.png").getImage();
+		readyToPlay = new ImageIcon("ready_to_play.png").getImage();
+		readyToPlayHover = new ImageIcon("ready_to_play_hover.png").getImage();
 
 		chatX = 10;
 		sendText = "You: ";
@@ -270,8 +351,6 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 			g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 25));
 			g.setColor(new Color(125, 125, 125, 220));
 			g.fillRect(10 + ServerConstants.FRAME_SIZE - viewX, 10 - viewY, 580, 560);
-			// g.setColor(Color.DARK_GRAY);
-			// g.fillRect(185 + ServerConstants.FRAME_SIZE - viewX, 300 - viewY, 230, 60);
 			String topText = "your team won!";
 			Color winStatus = blue;
 			if (won == false)
@@ -418,9 +497,18 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		// For my reference: StartPanel
 		g.setColor(Color.BLACK);
 		g.fillRect(ServerConstants.FRAME_SIZE - viewX, ServerConstants.FRAME_SIZE - viewY, 600, 600);
+		g.drawImage(area51, 200 + ServerConstants.FRAME_SIZE - viewX, 50 + ServerConstants.FRAME_SIZE - viewY, 200, 50, null);
+		Graphics2D g2d = (Graphics2D)g;
+		AffineTransform old = g2d.getTransform();
+		g2d.rotate(spinnerAngle, 300 + ServerConstants.FRAME_SIZE - viewX, 300 + ServerConstants.FRAME_SIZE - viewY);
+		g.drawImage(spinner, 100 + ServerConstants.FRAME_SIZE - viewX, 100 + ServerConstants.FRAME_SIZE - viewY, 400, 400, null);
+		g2d.setTransform(old);
 		if (showHoverPlay)
 			g.drawImage(playHover, 250 + ServerConstants.FRAME_SIZE - viewX, 285 + ServerConstants.FRAME_SIZE - viewY, 100, 50, null);
 		g.drawImage(play, 250 + ServerConstants.FRAME_SIZE - viewX, 275 + ServerConstants.FRAME_SIZE - viewY, 100, 50, null);
+		if (showHoverInstruction)
+			g.drawImage(instructionsHover, 200 + ServerConstants.FRAME_SIZE - viewX, 360 + ServerConstants.FRAME_SIZE - viewY, 200, 50, null);	
+		g.drawImage(instructions, 200 + ServerConstants.FRAME_SIZE - viewX, 350 + ServerConstants.FRAME_SIZE - viewY, 200, 50, null);
 
 		// For my reference: ServerInputPanel
 		g.setColor(Color.BLACK);
@@ -451,6 +539,31 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 			g.drawString("[press enter to continue]", ServerConstants.FRAME_SIZE - 30
 				- (int)(g.getFontMetrics().getStringBounds("[press enter to continue]", g).getWidth()), 400);
 		}
+
+		// For my reference: InstructionPanel
+		g.setColor(Color.BLACK);
+		g.fillRect(-viewX, -viewY, ServerConstants.FRAME_SIZE, ServerConstants.FRAME_SIZE * 9);
+		g.drawImage(moveDemo, 50 - viewX, 50 + ServerConstants.FRAME_SIZE * 2 - viewY, 500, 500, this);
+		g.drawImage(shootDemo, 50 - viewX, 50 + ServerConstants.FRAME_SIZE * 3 - viewY, 500, 500, this);
+		g.drawImage(bombsDemo, 50 - viewX, 50 + ServerConstants.FRAME_SIZE * 4 - viewY, 500, 500, this);
+		g.drawImage(ctfDemo, 50 - viewX, 50 + ServerConstants.FRAME_SIZE * 5 - viewY, 500, 500, this);
+		g.drawImage(rvbDemo, 50 - viewX, 50 + ServerConstants.FRAME_SIZE * 6 - viewY, 500, 500, this);
+		g.drawImage(collabDemo, 50 - viewX, 50 + ServerConstants.FRAME_SIZE * 7 - viewY, 500, 500, this);
+		g.drawImage(heartsDemo, 50 - viewX, 50 + ServerConstants.FRAME_SIZE * 8 - viewY, 500, 500, this);
+
+		String[] instructions = {"Move using the arrow keys", "Shoot by pressing the mouse", "Shoot the bombs to activate them",
+			"In CTF, bring the other team's flag to your team's side", "In Red vs. Blue, kill the players on the other team", "In Collaborative, kill the bots",
+			"Except in CTF, you have 3 lives but you can collect more"};
+		g.setColor(Color.WHITE);
+		for (int i = 0; i < instructions.length; i++)
+			g.drawString(instructions[i], 300 - (int)(g.getFontMetrics().getStringBounds(instructions[i], g).getWidth() / 2) - viewX,
+				32 + ServerConstants.FRAME_SIZE * (i + 2) - viewY);
+		
+		if (screenMoverLeftDown.isRunning())
+			return;
+		if (showHoverReadyToPlay)
+			g.drawImage(readyToPlayHover, 100 - viewX, 285 + ServerConstants.FRAME_SIZE - viewY, 400, 50, null);
+		g.drawImage(readyToPlay, 100 - viewX, 275 + ServerConstants.FRAME_SIZE - viewY, 400, 50, null);
 	}
 
 	// This method is part of the KeyListener. Whenever a key is
@@ -458,7 +571,15 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 	// and then responds appropriately.
 	public void keyPressed(KeyEvent evt)
 	{
-		if (viewX == ServerConstants.FRAME_SIZE && viewY == ServerConstants.FRAME_SIZE * 2)
+		if (viewX == ServerConstants.FRAME_SIZE && viewY == ServerConstants.FRAME_SIZE)
+		{
+			if (evt.getKeyCode() == KeyEvent.VK_LEFT)
+				spinnerVelocity -= 0.1;
+			else if (evt.getKeyCode() == KeyEvent.VK_RIGHT)
+				spinnerVelocity += 0.1;
+			// repaint();
+		}
+		else if (viewX == ServerConstants.FRAME_SIZE && viewY == ServerConstants.FRAME_SIZE * 2)
 		{
 			if (evt.getKeyCode() == KeyEvent.VK_ENTER && !hasEnteredName)
 			{
@@ -558,8 +679,15 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 	public void mousePressed(MouseEvent e)
 	{
 		requestFocus();
-		if (viewX == ServerConstants.FRAME_SIZE && viewY == ServerConstants.FRAME_SIZE && e.getX() >= 250 && e.getX() <= 350 && e.getY() >= 275 && e.getY() <= 325)
+		if (viewX == 0 && viewY == ServerConstants.FRAME_SIZE && e.getX() >= 100 && e.getX() <= 500 && e.getY() >= 275 && e.getY() <= 325)
 			moveRight();
+		if (viewX == ServerConstants.FRAME_SIZE && viewY == ServerConstants.FRAME_SIZE)
+		{
+			if (e.getX() >= 250 && e.getX() <= 350 && e.getY() >= 275 && e.getY() <= 325)
+				moveRight();
+			else if (e.getX() >= 200 && e.getX() <= 400 && e.getY() >= 350 && e.getY() <= 400)
+				moveLeftDown();
+		}
 		else if (viewX == ServerConstants.FRAME_SIZE && viewY == 0)
 		{
 			if (showWinner && e.getX() >= 185 && e.getX() <= 415 && e.getY() >= 300 && e.getY() <= 360)
@@ -595,11 +723,23 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 	// This method is part of the MouseListener but is not used.
 	public void mouseExited(MouseEvent e) {}
 
+	// This method is part of the MouseMotionListener but is not used.
 	public void mouseDragged(MouseEvent e) {}
 
+	// This method is part of the MouseMotionListener. Whenever the
+	// mouse is pressed, it checks which "panel" is currently being
+	// displayed and then responds appropriately.
 	public void mouseMoved(MouseEvent e)
 	{
-		if (viewX == ServerConstants.FRAME_SIZE && viewY == 0)
+		if (viewX == 0 && viewY == ServerConstants.FRAME_SIZE)
+		{
+			if (e.getX() >= 100 && e.getX() <= 500 && e.getY() >= 275 && e.getY() <= 325)
+				showHoverReadyToPlay = true;
+			else
+				showHoverReadyToPlay = false;
+			repaint();
+		}
+		else if (viewX == ServerConstants.FRAME_SIZE && viewY == 0)
 		{
 			if (showWinner)
 			{
@@ -625,6 +765,10 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 				showHoverPlay = true;
 			else
 				showHoverPlay = false;
+			if (e.getX() >= 200 && e.getX() <= 400 && e.getY() >= 350 && e.getY() <= 400)
+				showHoverInstruction = true;
+			else
+				showHoverInstruction = false;
 			repaint();
 		}
 	}
@@ -642,6 +786,7 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 	public void moveRight()
 	{
 		showHoverPlay = false;
+		showHoverReadyToPlay = false;
 		if (allScreenMoversStopped())
 			screenMoverRight.start();
 	}
@@ -652,6 +797,8 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 	{
 		if (allScreenMoversStopped())
 			screenMoverLeft.start();
+		else
+			needMoveLeft = true;
 	}
 
 	// This method starts the Timer to move the screen down
@@ -671,6 +818,15 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 			screenMoverUp.start();
 	}
 
+	// This method starts the Timer to move the screen left
+	// and down to switch between "panels" smoothly.
+	public void moveLeftDown()
+	{
+		showHoverInstruction = false;
+		if (allScreenMoversStopped())
+			screenMoverLeftDown.start();
+	}
+
 	// This method checks if all the Timers for moving the player
 	// are stopped so that when an arrow key is pressed, there is no
 	// interference in movement occuring due to 2 Timers running
@@ -684,7 +840,7 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 	// so that two are not being run at the same time.
 	public boolean allScreenMoversStopped()
 	{
-		return !(screenMoverUp.isRunning() || screenMoverDown.isRunning() || screenMoverLeft.isRunning() || screenMoverRight.isRunning());
+		return !(screenMoverUp.isRunning() || screenMoverDown.isRunning() || screenMoverLeft.isRunning() || screenMoverRight.isRunning()) || screenMoverLeftDown.isRunning();
 	}
 
 	// This method stops all the timers that move the current player
@@ -717,6 +873,7 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 					screenMoverUp.stop();
 					screenMoverLeft.stop();
 					screenMoverRight.stop();
+					screenMoverLeftDown.stop();
 					posX = posY = ServerConstants.BOARD_SIZE / 2;
 					movePosX = movePosY = 0;
 					winner = winningTeam = "";
@@ -725,6 +882,13 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 						gameBoard.resetBoard();
 						messages.clear();
 						deathLog.clear();
+					}
+					else if (viewX == 0 && viewY == ServerConstants.FRAME_SIZE * 2)
+						instructionScroller.start();
+					else if (viewX == ServerConstants.FRAME_SIZE * 2 && viewY == 0 && needMoveLeft)
+					{
+						moveLeft();
+						needMoveLeft = false;
 					}
 					Client.blueFlagTaken = Client.redFlagTaken = showWinner = won = false;
 					origX = viewX;
@@ -743,6 +907,8 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		textShower.start();
 	}
 
+	// This method adds a new message to the message log stored by the
+	// Client program.
 	public void addNewMessage(String msg)
 	{
 		if (!Client.players.get(Client.playerName).team.equals(msg.substring(0, msg.indexOf('\0'))))
@@ -751,6 +917,8 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		repaint();
 	}
 
+	// This method iterates over the log of messages and displays as many as
+	// can fit inside the chatbox.
 	public void displayMessages(Graphics g)
 	{
 		int y = 580;
@@ -763,6 +931,9 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		}
 	}
 
+	// THis method displays a single message for the chatbox and handles the
+	// message properly if it exceeds the width of the chatbox by making it
+	// multi-lined.
 	public int displayMessage(String line, int x, int y, Graphics g, boolean isYou)
 	{
 		ArrayList<String> currLine = new ArrayList<String>();
@@ -793,6 +964,8 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 		return currY;
 	}
 
+	// This method iterates over the log of deaths that have occured
+	// and displays up to 5 of the ost recent ones.
 	public void displayDeaths(Graphics g)
 	{
 		int y = 560;
@@ -800,6 +973,9 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 			y = displayDeath(g, 580, y, deathLog.get(i));
 	}
 
+	// This method displays one death by making it fit inside the recent
+	// death box and drawing boxes over the names to indicate team
+	// through the color of the box.
 	public int displayDeath(Graphics g, int x, int y, String death)
 	{
 		Color first = blue, second = red;
@@ -808,7 +984,7 @@ public class TotalPanel extends JPanel implements MouseListener, MouseMotionList
 			first = new Color(0, 0, 0, 0);
 			second = blue;
 		}
-		if (death.charAt(0) == ServerConstants.NONE_RED)
+		else if (death.charAt(0) == ServerConstants.NONE_RED)
 		{
 			first = new Color(0, 0, 0, 0);
 			second = red;

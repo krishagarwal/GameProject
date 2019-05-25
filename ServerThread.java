@@ -8,8 +8,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Scanner;
 
-import javax.sound.sampled.Clip;
-
 // This class handles receiving all the information from the Server
 // program. It runs runs separate from the GUI program so that it
 // can receive information about game play from the Server program
@@ -152,7 +150,11 @@ public class ServerThread implements Runnable
 						Client.totalPanel.repaint();
 					}
 				}
-				catch(Exception e) {}
+				catch(Exception e)
+				{
+					ServerConstants.showErrorMessage(Client.frame, "Error", "The connection was interrupted.\nTry again later.");
+					System.exit(2);
+				}
 			}
 			Client.socket = null;
 			Client.serverIn = null;
@@ -160,7 +162,8 @@ public class ServerThread implements Runnable
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			ServerConstants.showErrorMessage(Client.frame, "Error", "The connection was interrupted.\nTry again later.");
+			System.exit(2);
 		}
 	}
 }

@@ -135,7 +135,7 @@ public class Server implements Runnable
 						blowUp((int)(curr.posY / ServerConstants.FRAGMENT_SIZE), (int)(curr.posX / ServerConstants.FRAGMENT_SIZE));
 					if (nearest == null)
 						return;
-					if (nearest.getDistanceTo((int)(curr.posX), (int)(curr.posY)) < ServerConstants.FRAGMENT_SIZE / 2)
+					if (curr.posX >= nearest.posX - 25 && curr.posX <= nearest.posX + 25 && curr.posY >= nearest.posY - 25 && curr.posY <= nearest.posY + 25) // (nearest.getDistanceTo((int)(curr.posX), (int)(curr.posY)) < ServerConstants.FRAGMENT_SIZE / 2)
 					{
 						stopBullet(name);
 						nearest.decreaseHealth();
@@ -179,9 +179,8 @@ public class Server implements Runnable
 		}
 		catch (IOException e)
 		{
-			System.err.println("Could not listen on port: "
-				+ ServerConstants.PORT_NUMBER);
-			System.exit(1);
+			ServerConstants.showErrorMessage(null, "Error", "Another process is interrupting this program.\nTry again later.");
+			System.exit(2);
 		}
 	}
 
@@ -238,7 +237,8 @@ public class Server implements Runnable
 			}
 			catch (IOException e)
 			{
-				System.err.println("Accept failed on: " + ServerConstants.PORT_NUMBER);
+				ServerConstants.showErrorMessage(null, "Error", "Connection failed.\nTry again later.");
+				System.exit(2);
 			}
 		}
 	}
@@ -270,7 +270,8 @@ public class Server implements Runnable
 		}
 		catch(IOException e)
 		{
-			e.printStackTrace();
+			ServerConstants.showErrorMessage(null, "Error", "Could not establish connection.\nTry again later.");
+			System.exit(2);
 		}
 	}
 
@@ -372,7 +373,8 @@ public class Server implements Runnable
 					}
 					catch(IOException e)
 					{
-						e.printStackTrace();
+						ServerConstants.showErrorMessage(null, "Error", "Could not close connection.\nTry again later.");
+						System.exit(2);
 					}
 					clients.remove(this);
 					if (clients.size() == 0)
@@ -524,6 +526,8 @@ public class Server implements Runnable
 			}
 			catch(IOException ioe)
 			{
+				ServerConstants.showErrorMessage(null, "Error", "Could not close connection.\nTry again later.");
+				System.exit(2);
 				ioe.printStackTrace();
 			}
 		}

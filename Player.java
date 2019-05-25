@@ -251,7 +251,7 @@ public class Player
 			g.setColor(new Color(147, 197, 255, 80));
 		g.drawImage(costume, posX - ServerConstants.FRAGMENT_SIZE / 4, posY - ServerConstants.FRAGMENT_SIZE / 2, 
 			ServerConstants.FRAGMENT_SIZE / 2, ServerConstants.FRAGMENT_SIZE, null);
-		g.fillOval(posX - ServerConstants.FRAGMENT_SIZE / 2, posY - ServerConstants.FRAGMENT_SIZE / 2, ServerConstants.FRAGMENT_SIZE, ServerConstants.FRAGMENT_SIZE);
+		g.fillRect(posX - ServerConstants.FRAGMENT_SIZE / 2, posY - ServerConstants.FRAGMENT_SIZE / 2, ServerConstants.FRAGMENT_SIZE, ServerConstants.FRAGMENT_SIZE);
 		g.setColor(new Color(235 - (int)(health * 1.5), 35 + 2 * health, (int)(35 + health * 0.7)));
 		g.fillRect(posX - ServerConstants.FRAGMENT_SIZE / 2, posY - ServerConstants.FRAGMENT_SIZE / 2 - 25,
 			(int)(ServerConstants.FRAGMENT_SIZE / (double)(ServerConstants.HEALTH) * health), 5);
@@ -276,13 +276,5 @@ public class Player
 			g2d.drawImage(rightGun, posX, posY - 7, 25, 15, null);
 		}
 		g2d.setTransform(old);
-		Graphics2D dG = (Graphics2D)(g.create());
-		dG.setStroke(new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{9}, 0));
-		dG.setColor(Color.BLACK);
-		dG.drawLine(posX - 25, posY - 25, posX + 25, posY - 25);
-		dG.drawLine(posX - 25, posY - 25, posX - 25, posY + 25);
-		dG.drawLine(posX + 25, posY + 25, posX - 25, posY + 25);
-		dG.drawLine(posX + 25, posY + 25, posX + 25, posY - 25);
-		dG.dispose();
 	}
 }

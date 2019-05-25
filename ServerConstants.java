@@ -52,6 +52,7 @@ public final class ServerConstants
 	public static final String BLOW_UP = 				"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	public static final String SEND_MESSAGE = 			"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	public static final String ADD_LIFE = 				"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
+	public static final String REMOVE_CLIENT = 			"\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1";
 	
 	// For my reference: used as a separator, must have special
 	// character
@@ -89,7 +90,8 @@ public final class ServerConstants
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+			ServerConstants.showErrorMessage(null, "Error", "Could not load audio file.\nPlease make sure you have all files.");
+			System.exit(2);
 		}
 	}
 	

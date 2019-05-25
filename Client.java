@@ -42,7 +42,7 @@ public class Client
 		playerName = ip = team = "";
 		totalPanel = new TotalPanel();
 		
-		frame = new JFrame("Game");
+		frame = new JFrame("Area 51");
 		frame.setSize(ServerConstants.FRAME_SIZE, ServerConstants.FRAME_SIZE);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setContentPane(totalPanel);
@@ -80,7 +80,10 @@ public class Client
 			public void windowClosing(WindowEvent e)
 			{
 				if (out != null)
+				{
 					send(ServerConstants.DELETE_PLAYER + Client.playerName);
+					send(ServerConstants.REMOVE_CLIENT);
+				}
 			}
 		};
 	}
@@ -111,7 +114,8 @@ public class Client
 		}
 		catch(IOException ioe)
 		{
-			ioe.printStackTrace();
+			ServerConstants.showErrorMessage(frame, "Error", "Could not close connection.\nTry again later.");
+			System.exit(2);
 		}
 		ip = team = "";
 		bulletCount = 0;
@@ -162,10 +166,3 @@ public class Client
 		return true;
 	}
 }
-
-/*
-Alien tag
-alien wars
-area 51+
-area 51
-*/
